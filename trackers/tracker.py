@@ -7,7 +7,7 @@ import pickle
 import os
 import sys
 sys.path.append('../')
-from utils import get_center_of_bbox, get_bbox_wdth
+from utils import get_center_of_bbox, get_bbox_width
 class Tracker:
     def __init__(self,model_path):
         self.model = YOLO(model_path)
@@ -19,7 +19,7 @@ class Tracker:
         for i in range (0,len(frames),batch_size):
             detections_batch = self.model.predict(frames[i:i+batch_size],conf=0.1)
             detections += detections_batch
-            break
+            # break
         return detections
     # def get_objects_tracks(self,frames):
     #     detections = self.detect_frames(frames)
@@ -42,7 +42,7 @@ class Tracker:
             cls_names_inv = {v:k for k,v in cls_names.items()}
 
             #Convert to supervision Detection format
-            detection_supervision = sv.Detections.from_ultralytics(detections)
+            detection_supervision = sv.Detections.from_ultralytics(detection)
 
             #Convert Goalkeeper to player object
             for object_ind , class_id in enumerate(detection_supervision.class_id):
@@ -62,10 +62,10 @@ class Tracker:
                 track_id = frame_detection[4]
 
                 if cls_id == cls_names_inv['player']:
-                    tracks["players"] [frame_num][track_id] = {"bbox":bbox}
+                    tracks["players"][frame_num][track_id] = {"bbox":bbox}
 
                 if cls_id == cls_names_inv['referee']:
-                    tracks["referees"] [frame_num][track_id] = {"bbox":bbox}
+                    tracks["referees"][frame_num][track_id] = {"bbox":bbox}
 
             for frame_detection in detection_supervision:
                 bbox = frame_detection[0].tolist()
@@ -81,14 +81,12 @@ class Tracker:
 
         return tracks
 
-            # print(detections_with_tracks)
-            #
-            # break
+
 
     def draw_ellipse(self,frame,bbox,color,track_id=None):
         y2 =  int(bbox[3])
         x_center, _ = get_center_of_bbox(bbox)
-        width = get_bbox_wdth(bbox)
+        width = get_bbox_width(bbox)
 
         cv2.ellipse(
             frame,
@@ -151,13 +149,21 @@ class Tracker:
 
     def draw_annotations(self,video_frames,tracks):
         output_video_frames = []
+        print(f"--- BÁO CÁO SENIOR ---")
+        print(f"Tổng số frame video: {len(video_frames)}")
+        print(f"Tổng số frame trong data players: {len(tracks['players'])}")
         for frame_num, frame in enumerate(video_frames):
             frame = frame.copy()
-
+            if frame_num >= len(tracks["players"]):
+                print(f"CẢNH BÁO: Frame {frame_num} không có dữ liệu tracking!")
+                output_video_frames.append(frame)
+                continue
             player_dict = tracks["players"][frame_num]
             ball_dict = tracks["ball"][frame_num]
             referee_dict = tracks["referees"][frame_num]
 
+            if frame_num % 100 == 0:  # Cứ mỗi 100 frame in một lần cho đỡ rác log
+                print(f"Frame {frame_num}: Tìm thấy {len(player_dict)} cầu thủ")
             #draw player
             for track_id, player in player_dict.items():
                 frame = self.draw_ellipse(frame, player["bbox"],(0,0,255),track_id)
