@@ -6,6 +6,7 @@ import supervision as sv
 import pickle
 import os
 import sys
+import pandas
 sys.path.append('../')
 from utils import get_center_of_bbox, get_bbox_width
 class Tracker:
@@ -13,6 +14,8 @@ class Tracker:
         self.model = YOLO(model_path)
         self.tracker = sv.ByteTrack()
 
+    def interpolate_ball_positions(self,ball_positions):
+        ball_detections = [x.get(1,{}).get('bbox',[]) for x in ball_positions]
     def detect_frames(self,frames):
         batch_size=20
         detections = []
@@ -149,7 +152,6 @@ class Tracker:
 
     def draw_annotations(self,video_frames,tracks):
         output_video_frames = []
-        print(f"--- BÁO CÁO SENIOR ---")
         print(f"Tổng số frame video: {len(video_frames)}")
         print(f"Tổng số frame trong data players: {len(tracks['players'])}")
         for frame_num, frame in enumerate(video_frames):
@@ -162,11 +164,12 @@ class Tracker:
             ball_dict = tracks["ball"][frame_num]
             referee_dict = tracks["referees"][frame_num]
 
-            if frame_num % 100 == 0:  # Cứ mỗi 100 frame in một lần cho đỡ rác log
+            if frame_num % 100 == 0:
                 print(f"Frame {frame_num}: Tìm thấy {len(player_dict)} cầu thủ")
             #draw player
             for track_id, player in player_dict.items():
-                frame = self.draw_ellipse(frame, player["bbox"],(0,0,255),track_id)
+                color = player.get("team_color",(0,0,225))
+                frame = self.draw_ellipse(frame, player["bbox"],color ,track_id)
 
             # draw referee
             for _, referee in referee_dict.items():
