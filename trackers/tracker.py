@@ -6,7 +6,7 @@ import supervision as sv
 import pickle
 import os
 import sys
-import pandas
+import pandas as pd
 sys.path.append('../')
 from utils import get_center_of_bbox, get_bbox_width
 class Tracker:
@@ -16,6 +16,16 @@ class Tracker:
 
     def interpolate_ball_positions(self,ball_positions):
         ball_detections = [x.get(1,{}).get('bbox',[]) for x in ball_positions]
+        df_ball_positions = pd.DataFrame(ball_detections,columns=['x1','y1','x2','y2'])
+
+        df_ball_positions = df_ball_positions.interpolate()
+        df_ball_positions = df_ball_positions.bfill()
+
+        ball_detections = [{1: {"bbox":x}} for x in df_ball_positions.to_numpy().tolist()]
+        return ball_detections
+
+
+        # df_ball_positions.to_csv('ball_positions.csv',index=False)
     def detect_frames(self,frames):
         batch_size=20
         detections = []
@@ -83,7 +93,6 @@ class Tracker:
                 pickle.dump(tracks, f)
 
         return tracks
-
 
 
     def draw_ellipse(self,frame,bbox,color,track_id=None):
