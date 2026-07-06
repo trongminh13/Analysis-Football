@@ -101,22 +101,4 @@ python main.py
 - Video kết quả sẽ được tạo ra tại thư mục `output_videos/`.
 
 ---
-
-## 📈 Roadmap & Định Hướng Cải Thiện
-
-Để nâng cấp dự án lên cấp độ Production, dưới đây là các hạng mục cần được tối ưu:
-
-- [ ] **Mở rộng tập dữ liệu:** Training mô hình với dataset đa dạng hơn (nhiều góc quay, điều kiện thời tiết).
-- [ ] **Cải thiện độ chính xác với cầu thủ ở xa:** Cầu thủ ở xa có box size nhỏ, cần huấn luyện kỹ hơn để tránh mất dấu (lost track).
-- [ ] **Tối ưu tốc độ xử lý (Real-time):** Lựa chọn và cân bằng giữa mô hình tốc độ và độ chính xác (ví dụ: đạt khoảng 12-15 FPS cho nhu cầu xử lý tức thời).
-- [ ] **Tách file cấu hình (Configuration):** Tạo một file `config.yaml` riêng để dễ dàng tinh chỉnh các ngưỡng (thresholds) phù hợp với từng video mà không cần can thiệp vào mã nguồn.
-- [ ] **Thêm file `requirements.txt`:** Chuẩn hóa môi trường cài đặt cho người dùng mới qua `pip install -r requirements.txt`.
-- [ ] **Nâng cấp khả năng bắt bóng (Ball tracking):** Camera quay ở 300fps có thể ghi nhận quỹ đạo bóng tốt hơn, cần tối ưu lại logic nội suy đường bóng.
-- [ ] **Gán ID cầu thủ thông minh (Re-identification):** Đảm bảo ID của cầu thủ không bị thay đổi (ID swap) khi có sự che khuất (occlusion) bằng cách tích hợp mô hình ReID.
-
-### ❓ Câu Hỏi Thảo Luận Thiết Kế Mở Rộng
-- Hệ thống nên tracking mỗi cầu thủ riêng biệt hay tracking theo form đội hình?
-- Có cần thiết phải detect thêm các đối tượng ngoài lề như: Huấn luyện viên, nhân viên an ninh, hay nhà báo ngoài sân không? Điều này sẽ ảnh hưởng thế nào đến hiệu năng?
-
----
 *Dự án được xây dựng với mục tiêu ứng dụng AI vào phân tích thể thao chuyên nghiệp.*
