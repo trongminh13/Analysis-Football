@@ -1,0 +1,1012 @@
+================================================================================================================
+TỪ VỰNG BẮT BUỘC NHỚ KHI PHỎNG VẤN APPLIED AI / COMPUTER VISION / AEC
+Định dạng: ENGLISH | TIẾNG VIỆT | ĐỊNH NGHĨA NGẮN | VÍ DỤ / CÁCH NÓI
+================================================================================================================
+
+CÁCH HỌC NHANH
+
+- Học kỹ phần A, B, C, D và G trước; đây là nhóm dễ bị hỏi trực tiếp từ hai dự án.
+- Không cần đọc thuộc từng chữ. Cần giải thích được khái niệm bằng ngôn ngữ của mình.
+- Khi quên thuật ngữ, mô tả chức năng trước rồi mới gọi tên: "the matrix mapping one plane to another — homography".
+- Phân biệt rõ: model output, structured representation, validation và business outcome.
+- Các từ có dấu [CORE] là bắt buộc phải nói trôi chảy.
+
+
+================================================================================================================
+A. APPLIED AI, LLM VÀ AGENTIC WORKFLOW
+================================================================================================================
+
+[CORE] Applied AI | AI ứng dụng | Dùng AI để giải quyết một quy trình hoặc quyết định thực tế, không chỉ nghiên cứu model | Dự án biến PRD thành test artifact có thể review và chạy tiếp.
+[CORE] Large Language Model (LLM) | Mô hình ngôn ngữ lớn | Mô hình học từ lượng văn bản lớn để hiểu và sinh ngôn ngữ/token | LLM phân tích requirement rồi sinh scenario có cấu trúc.
+[CORE] AI Agent | Tác nhân AI | Thành phần dùng model để nhận mục tiêu, xử lý context và tạo hành động/output theo workflow | Agent 1 trích xuất flow từ PRD.
+[CORE] Agentic Workflow | Quy trình có tác nhân AI | Chuỗi bước trong đó một hoặc nhiều agent xử lý nhiệm vụ có trạng thái và kiểm soát | Ba agent chạy tuần tự từ requirement tới YAML.
+Multi-agent System | Hệ thống đa tác nhân | Hệ thống chia nhiệm vụ cho nhiều agent có trách nhiệm riêng | Agent phân tích, agent sinh scenario và agent sinh script.
+Orchestration | Điều phối | Quản lý thứ tự, dữ liệu, trạng thái, lỗi và retry giữa các thành phần | Backend orchestration gọi từng agent theo stage.
+[CORE] Pipeline | Chuỗi xử lý | Nhiều bước xử lý nối tiếp, output bước trước thành input bước sau | PRD → flows → scenarios → YAML.
+Stage | Giai đoạn | Một bước độc lập trong pipeline với input/output xác định | Schema validation là một stage.
+Upstream | Phía trước luồng | Thành phần tạo dữ liệu cho bước hiện tại | Agent 1 là upstream của Agent 2.
+Downstream | Phía sau luồng | Thành phần tiêu thụ kết quả của bước hiện tại | Agent 3 là downstream của Agent 2.
+[CORE] Context | Ngữ cảnh | Dữ liệu được đưa cho model trong một lần xử lý | Context gồm nội dung PRD và output stage trước.
+Context Window | Cửa sổ ngữ cảnh | Số token tối đa model có thể nhận và tạo trong một request | PRD dài có thể vượt context window.
+Token | Đơn vị token | Đơn vị nhỏ mà model dùng để biểu diễn và xử lý văn bản | Một từ có thể gồm một hoặc nhiều token.
+[CORE] Prompt | Chỉ dẫn cho mô hình | Nội dung mô tả vai trò, nhiệm vụ, dữ liệu và định dạng output cho model | Prompt yêu cầu Agent 2 trả JSON theo schema.
+System Prompt | Chỉ dẫn hệ thống | Chỉ dẫn có mức ưu tiên cao định nghĩa hành vi và giới hạn model | System prompt cấm agent tự bịa element ID.
+Prompt Template | Mẫu prompt | Cấu trúc prompt tái sử dụng với các biến đầu vào | Template chèn feature name và flow content.
+Prompt Engineering | Kỹ thuật thiết kế prompt | Thiết kế và thử nghiệm chỉ dẫn để model tạo output ổn định hơn | Thêm examples và constraint vào prompt.
+Few-shot Prompting | Prompt có ít ví dụ | Cung cấp một vài cặp input-output mẫu cho model | Cho model hai ví dụ scenario đúng schema.
+[CORE] Zero-shot | Không có ví dụ huấn luyện tại chỗ | Model xử lý nhiệm vụ mà không được đưa example cụ thể trong prompt | Cần benchmark riêng mới gọi 88,4% là zero-shot.
+One-shot | Có một ví dụ | Prompt cung cấp đúng một example để định hướng output | Một YAML mẫu được đưa trong prompt.
+Chain of Thought | Chuỗi suy luận | Các bước suy luận trung gian của model; không nhất thiết nên yêu cầu hoặc hiển thị nguyên văn | Có thể yêu cầu rationale ngắn thay vì chain nội bộ.
+Structured Output | Đầu ra có cấu trúc | Output tuân theo schema để máy khác có thể parse và validate | Agent trả JSON thay vì văn bản tự do.
+[CORE] JSON-first | Ưu tiên JSON trước | Sinh và kiểm tra representation JSON trước khi render sang format cuối | Validate scenario JSON rồi mới tạo YAML.
+Schema | Lược đồ dữ liệu | Quy định field, kiểu dữ liệu, trường bắt buộc và constraint | Scenario schema yêu cầu id, steps và expected outcome.
+Schema Validation | Kiểm tra lược đồ | Xác minh dữ liệu đúng field/type/constraint đã định nghĩa | Reject output thiếu scenario ID.
+Syntactic Validity | Tính hợp lệ cú pháp | Output đúng grammar/format | YAML parse được là syntactically valid.
+[CORE] Semantic Correctness | Tính đúng ngữ nghĩa | Output đúng logic và ý nghĩa nghiệp vụ, không chỉ đúng format | YAML hợp lệ nhưng bấm sai nút là sai semantic.
+Grounding | Neo vào nguồn dữ liệu | Ràng buộc output dựa trên tài liệu hoặc dữ kiện đã cung cấp | Scenario phải dựa trên PRD, không tự bịa màn hình.
+Hallucination | Ảo giác mô hình | Model tạo thông tin có vẻ hợp lý nhưng không có trong nguồn | Agent tự tạo element ID không tồn tại.
+Retrieval-Augmented Generation (RAG) | Sinh tăng cường truy xuất | Truy xuất đoạn tài liệu liên quan rồi đưa vào LLM để trả lời/sinh output | Tìm requirement liên quan trước khi sinh scenario.
+Embedding | Vector biểu diễn ngữ nghĩa | Vector số hóa nội dung để đo độ tương đồng | Embedding dùng tìm đoạn PRD gần với query.
+Vector Database | Cơ sở dữ liệu vector | Kho lưu embedding hỗ trợ similarity search | Lưu chunk tài liệu để retrieval.
+Chunking | Chia đoạn dữ liệu | Chia tài liệu lớn thành phần nhỏ để xử lý/truy xuất | Chia PRD theo section hoặc user flow.
+[CORE] Segmented Loop | Vòng lặp phân đoạn | Xử lý từng flow/segment riêng để tránh tràn context và cô lập lỗi | Agent 2 sinh scenario lần lượt theo từng flow.
+Intermediate Representation (IR) | Biểu diễn trung gian | Cấu trúc chuẩn nằm giữa input thô và output cuối | JSON object là IR trước YAML.
+[CORE] Human-in-the-Loop (HITL) | Con người trong vòng xử lý | Con người review, sửa hoặc phê duyệt output AI ở điểm kiểm soát | QA duyệt YAML trước CI/CD.
+Human Review | Kiểm duyệt con người | Bước chuyên gia xem và xác nhận output | Reviewer kiểm tra expected result.
+Feedback Loop | Vòng phản hồi | Dùng phản hồi để sửa output hoặc cải thiện hệ thống | QA gửi feedback và agent regenerate.
+Partial Regeneration | Sinh lại một phần | Chỉ chạy lại phần được chọn hoặc phần downstream bị ảnh hưởng | Sửa một flow mà không chạy lại tất cả.
+Partial Rerun | Chạy lại một phần | Thực thi lại một stage/subset thay vì toàn pipeline | Rerun Agent 3 cho một scenario.
+Stale Artifact | Artifact đã lỗi thời | Output downstream không còn phù hợp vì upstream đã thay đổi | Sửa scenario khiến YAML cũ thành stale.
+Artifact | Sản phẩm trung gian | Kết quả được lưu của một lần chạy/stage | Flow JSON, scenario JSON và YAML là artifacts.
+Versioning | Quản lý phiên bản | Lưu và phân biệt các phiên bản dữ liệu/model/output | Commit output trước khi regeneration.
+Draft | Bản nháp | Phiên bản đang sửa, chưa được chốt | QA review draft YAML.
+Committed Version | Phiên bản đã chốt | Phiên bản được xác nhận để bảo vệ khỏi ghi đè | Committed artifact là mốc an toàn.
+Trace | Dấu vết thực thi | Bản ghi các bước, request, response, latency và lỗi | Langfuse trace giúp debug Agent 2.
+Observability | Khả năng quan sát hệ thống | Khả năng hiểu trạng thái nội bộ qua log, metric và trace | Theo dõi token, latency và lỗi từng agent.
+Guardrail | Hàng rào kiểm soát | Rule/validator giới hạn hành vi hoặc output không an toàn/sai | Schema và forbidden-field checks là guardrails.
+Retry | Thử lại | Chạy lại request khi lỗi tạm thời hoặc output invalid | Retry khi LLM timeout.
+Fallback | Phương án dự phòng | Cách xử lý thay thế khi phương án chính thất bại | Dùng model khác khi provider unavailable.
+Idempotency | Tính lặp không đổi | Gọi cùng thao tác nhiều lần không tạo tác dụng phụ ngoài ý muốn | Retry upload không tạo hai document.
+Determinism | Tính xác định | Cùng input/config tạo kết quả giống hoặc gần giống | Temperature thấp giúp output ổn định hơn nhưng không tuyệt đối.
+Temperature | Tham số độ ngẫu nhiên | Điều khiển mức đa dạng của token sampling | Structured generation thường dùng temperature thấp.
+Inference | Suy luận | Chạy model đã huấn luyện để tạo prediction/output | Gọi LLM sinh test scenarios là inference.
+Fine-tuning | Tinh chỉnh mô hình | Huấn luyện thêm model pretrained bằng dữ liệu nhiệm vụ cụ thể | Fine-tune detector trên bốn class bóng đá.
+Prompt Injection | Tiêm chỉ dẫn độc hại | Nội dung input cố ghi đè chỉ dẫn hệ thống hoặc làm model hành động sai | Tài liệu upload chứa câu “ignore previous instructions”.
+Evaluation Set | Tập đánh giá | Bộ mẫu cố định dùng đo chất lượng hệ thống | PRD và expected artifacts đã được reviewer xác nhận.
+Regression Set | Tập kiểm tra hồi quy | Bộ case bảo đảm thay đổi mới không làm hỏng hành vi cũ | Chạy lại các PRD khó sau khi sửa prompt.
+
+
+================================================================================================================
+B. COMPUTER VISION CƠ BẢN
+================================================================================================================
+
+[CORE] Computer Vision (CV) | Thị giác máy tính | Lĩnh vực giúp máy hiểu thông tin từ ảnh/video | Phát hiện player và ball trong video.
+Image | Ảnh | Ma trận pixel thường có height, width và channel | Ảnh BGR trong OpenCV là NumPy array.
+Pixel | Điểm ảnh | Phần tử nhỏ nhất của ảnh raster, chứa giá trị cường độ/màu | Một pixel BGR có ba channel.
+Resolution | Độ phân giải | Số pixel theo chiều rộng và cao | Video mẫu 1920×1080.
+Channel | Kênh ảnh | Một thành phần giá trị của pixel | RGB có ba channel đỏ, xanh lá, xanh dương.
+Raster Image | Ảnh raster | Ảnh biểu diễn bằng lưới pixel | PNG/JPEG và bản scan là raster.
+Vector Graphic | Đồ họa vector | Hình biểu diễn bằng đường/path/shape toán học | PDF vector giữ line và text chính xác.
+Frame | Khung hình | Một ảnh đơn trong chuỗi video | Video 25 FPS có 25 frame mỗi giây.
+[CORE] Frames Per Second (FPS) | Số khung hình mỗi giây | Tần suất frame của video | FPS sai làm sai thời lượng và tốc độ.
+Codec | Bộ mã hóa/giải mã | Thuật toán nén và giải nén video/audio | XVID được dùng ghi output AVI.
+Preprocessing | Tiền xử lý | Biến đổi input trước khi đưa vào model | Resize, normalize và color conversion.
+Post-processing | Hậu xử lý | Xử lý prediction sau model | NMS, tracking và schema conversion.
+Normalization | Chuẩn hóa | Đưa giá trị về thang/phân phối phù hợp | Pixel 0–255 có thể đổi về 0–1.
+Resize | Thay đổi kích thước | Đổi width/height của ảnh | Resize bản vẽ quá nhỏ làm mất symbol.
+Aspect Ratio | Tỷ lệ khung hình | Tỷ lệ width/height | Giữ aspect ratio để tránh méo object.
+Letterboxing | Đệm ảnh giữ tỷ lệ | Resize rồi thêm padding để đạt kích thước model | YOLO thường letterbox ảnh về 640×640.
+Region of Interest (ROI) | Vùng quan tâm | Vùng ảnh được chọn để xử lý | Chỉ detect trong vùng sân/công trường.
+Crop | Cắt ảnh | Lấy một vùng con từ ảnh | Crop nửa trên bbox để lấy màu áo.
+Grayscale | Ảnh xám | Ảnh một channel biểu diễn độ sáng | Optical Flow dùng frame grayscale.
+RGB | Không gian màu RGB | Biểu diễn màu bằng Red, Green, Blue | Thư viện hiển thị thường dùng RGB.
+BGR | Không gian màu BGR | Thứ tự Blue, Green, Red mặc định của OpenCV | Cần đổi BGR sang RGB khi dùng Matplotlib.
+HSV | Hue–Saturation–Value | Không gian màu tách sắc độ, độ bão hòa và độ sáng | Phân màu áo ổn định hơn RGB trong một số điều kiện.
+CIE Lab | Không gian màu Lab | Không gian gần đồng đều theo cảm nhận màu | Khoảng cách màu Lab hữu ích cho clustering.
+Color Conversion | Chuyển không gian màu | Đổi ảnh giữa BGR/RGB/HSV/gray | cv2.cvtColor chuyển BGR sang grayscale.
+Histogram | Biểu đồ phân bố cường độ | Đếm số pixel theo giá trị màu/độ sáng | Histogram giúp phân tích contrast.
+Contrast | Độ tương phản | Mức khác biệt sáng/tối hoặc foreground/background | Bản scan contrast thấp khó OCR.
+Noise | Nhiễu | Biến đổi không mong muốn trong ảnh | Scan noise tạo chấm nhỏ trên bản vẽ.
+Denoising | Khử nhiễu | Loại hoặc giảm noise trước xử lý | Median filter xử lý salt-and-pepper noise.
+Gaussian Blur | Làm mờ Gaussian | Bộ lọc làm mượt ảnh và giảm nhiễu cao tần | Dùng trước Canny edge detection.
+Median Blur | Lọc trung vị | Thay pixel bằng trung vị vùng lân cận | Giữ edge tốt khi loại nhiễu chấm.
+Bilateral Filter | Lọc song phương | Làm mượt nhưng cố giữ biên | Hữu ích khi cần denoise mà không mất cạnh.
+Thresholding | Phân ngưỡng | Tách foreground/background theo giá trị pixel | Chuyển bản scan thành đen trắng.
+Global Threshold | Ngưỡng toàn cục | Dùng một threshold cho toàn ảnh | Phù hợp ánh sáng đồng đều.
+Adaptive Threshold | Ngưỡng thích nghi | Threshold thay đổi theo vùng lân cận | Hữu ích với giấy scan sáng tối không đều.
+Otsu Thresholding | Ngưỡng Otsu | Tự chọn threshold tối ưu từ histogram hai nhóm | Tách nét đen khỏi nền giấy.
+Binary Image | Ảnh nhị phân | Ảnh chỉ có hai giá trị foreground/background | Mask tường sau threshold.
+Mask | Mặt nạ | Mảng chọn vùng/pixel được giữ hoặc bỏ | Mask vùng tĩnh để tìm camera features.
+Morphology | Phép toán hình thái học | Biến đổi hình dạng foreground bằng kernel | Làm sạch mask vết nứt.
+Erosion | Co ảnh | Thu nhỏ foreground, loại vùng nhỏ | Loại chấm nhiễu trắng.
+Dilation | Giãn ảnh | Mở rộng foreground, nối vùng gần nhau | Nối nét tường bị đứt.
+Opening | Phép mở | Erosion rồi dilation, thường loại nhiễu nhỏ | Làm sạch chấm trong bản scan.
+Closing | Phép đóng | Dilation rồi erosion, thường lấp khe nhỏ | Nối đường line bị đứt.
+Kernel | Nhân lọc/phần tử cấu trúc | Ma trận nhỏ trượt trên ảnh để lọc hoặc morphology | Kernel 3×3 cho erosion.
+Gradient | Độ biến thiên | Mức thay đổi cường độ theo không gian | Edge thường có gradient lớn.
+Edge Detection | Phát hiện biên | Tìm vị trí cường độ thay đổi mạnh | Canny tìm cạnh tường.
+Canny Edge Detector | Bộ phát hiện biên Canny | Pipeline blur, gradient, non-max suppression và hysteresis | Dùng tìm line trước Hough.
+Sobel Operator | Toán tử Sobel | Xấp xỉ gradient theo X/Y | Tìm cạnh đứng hoặc ngang.
+Contour | Đường bao | Chuỗi điểm mô tả biên của vùng | Đo diện tích/chu vi vùng segmentation.
+Connected Components | Thành phần liên thông | Các nhóm pixel foreground nối với nhau | Tách từng symbol sau threshold.
+Hough Transform | Biến đổi Hough | Tìm shape theo không gian tham số | Hough Line tìm đường tường thẳng.
+Feature | Đặc trưng | Thông tin hữu ích trích từ ảnh hoặc model | Corner, edge hoặc deep embedding.
+Keypoint | Điểm đặc trưng | Vị trí ảnh nổi bật có thể phát hiện/so khớp | Corner tĩnh dùng estimate camera motion.
+Descriptor | Mô tả đặc trưng | Vector mô tả vùng quanh keypoint | ORB descriptor dùng matching hai ảnh.
+Feature Matching | Ghép đặc trưng | Tìm keypoint tương ứng giữa hai ảnh | Align hai revision bản vẽ.
+Data Augmentation | Tăng cường dữ liệu | Tạo biến thể train giúp model generalize | Flip, scale, HSV jitter và mosaic.
+Domain Shift | Dịch chuyển miền dữ liệu | Dữ liệu triển khai khác phân phối train | Camera công trường mới có góc và ánh sáng khác.
+Generalization | Khả năng tổng quát hóa | Model hoạt động tốt trên dữ liệu chưa thấy | Test trên trận hoặc dự án hoàn toàn mới.
+
+
+================================================================================================================
+C. DETECTION, SEGMENTATION VÀ OCR
+================================================================================================================
+
+[CORE] Image Classification | Phân loại ảnh | Gán class cho toàn bộ ảnh | Phân loại ảnh có/không có vết nứt.
+[CORE] Object Detection | Phát hiện đối tượng | Tìm class và bounding box của nhiều object | YOLO phát hiện player, referee và ball.
+Localization | Định vị | Xác định vị trí một object trong ảnh | Dự đoán bbox của thiết bị.
+[CORE] Bounding Box (BBox) | Hộp bao | Hình chữ nhật bao quanh object | Bbox dạng x1,y1,x2,y2.
+Axis-Aligned Bounding Box (AABB) | Hộp bao song song trục | Bbox không xoay, cạnh song song trục X/Y | Bbox YOLO thông thường.
+Oriented Bounding Box (OBB) | Hộp bao có hướng | Bbox gồm vị trí, kích thước và góc xoay | Hợp với text/symbol xoay trên bản vẽ.
+Class | Lớp đối tượng | Nhãn loại của object | ball, goalkeeper, player, referee.
+Class ID | Mã lớp | Số nguyên ánh xạ tới tên class | Class 0 là ball trong data.yaml.
+Confidence Score | Điểm tin cậy | Mức model tin prediction là object/class đúng | Confidence 0.9 cao hơn 0.2.
+Confidence Threshold | Ngưỡng tin cậy | Mức tối thiểu để giữ prediction | Repo dùng threshold 0.1.
+True Positive (TP) | Dương tính đúng | Prediction đúng class và đạt điều kiện IoU | Detect đúng một player.
+False Positive (FP) | Dương tính giả | Model báo object nhưng ground truth không có | Nhầm quảng cáo tròn thành bóng.
+False Negative (FN) | Âm tính giả/bỏ sót | Ground truth có nhưng model không phát hiện | Bỏ sót bóng bị che.
+True Negative (TN) | Âm tính đúng | Model đúng khi không báo class/vùng không có object | Ít dùng trực tiếp trong metric detection nhiều object.
+[CORE] Intersection over Union (IoU) | Tỷ lệ giao trên hợp | Diện tích giao hai bbox/mask chia diện tích hợp | IoU dùng ghép prediction với ground truth.
+[CORE] Precision | Độ chính xác dương tính | TP/(TP+FP), trong prediction đã báo có bao nhiêu đúng | Precision cao nghĩa là ít báo nhầm.
+[CORE] Recall | Độ bao phủ/độ nhạy | TP/(TP+FN), trong object thật tìm được bao nhiêu | Safety monitoring thường ưu tiên recall.
+Specificity | Độ đặc hiệu | TN/(TN+FP), khả năng nhận đúng negative | Hữu ích trong classification nhị phân.
+F1 Score | Điểm F1 | Trung bình điều hòa của precision và recall | Dùng cân bằng hai metric.
+Precision–Recall Curve | Đường cong precision–recall | Thể hiện trade-off khi thay confidence threshold | Dùng chọn operating point.
+Average Precision (AP) | Độ chính xác trung bình | Diện tích dưới PR curve của một class | AP_ball đánh giá riêng class bóng.
+[CORE] Mean Average Precision (mAP) | AP trung bình | Trung bình AP qua các class và có thể qua các IoU threshold | mAP50 của train khoảng 0.838.
+mAP@0.5 | mAP tại IoU 0.5 | Prediction được match ở threshold IoU 0.5 | Không có nghĩa đơn giản là model đúng 84%.
+mAP@0.5:0.95 | mAP nhiều ngưỡng IoU | Trung bình AP tại IoU 0.5 đến 0.95 | Khắt khe hơn về định vị bbox.
+[CORE] Non-Maximum Suppression (NMS) | Khử cực đại không tối đa | Loại bbox trùng bằng confidence và IoU | Giữ bbox người có score cao nhất.
+Soft-NMS | NMS mềm | Giảm score bbox trùng thay vì xóa ngay | Hữu ích khi object gần nhau.
+Weighted Box Fusion (WBF) | Hợp nhất bbox có trọng số | Gộp bbox từ nhiều prediction/model theo confidence | Merge detection ở tile overlap.
+One-stage Detector | Detector một giai đoạn | Dự đoán bbox/class trong một forward pass | YOLO là one-stage, thường nhanh.
+Two-stage Detector | Detector hai giai đoạn | Sinh region proposal rồi phân loại/refine | Faster R-CNN là two-stage.
+[CORE] YOLO | You Only Look Once | Họ one-stage detector tối ưu tốc độ và detection end-to-end | Fine-tune YOLO trên bốn class.
+Backbone | Mạng trích đặc trưng | Phần model biến ảnh thành feature maps | Backbone học edge, texture và semantic feature.
+Neck | Phần hợp nhất đặc trưng | Kết hợp feature nhiều scale trước detection head | FPN/PAN hỗ trợ object kích thước khác nhau.
+Detection Head | Đầu phát hiện | Phần dự đoán bbox, confidence và class | Head trả prediction ở nhiều scale.
+Feature Pyramid | Tháp đặc trưng | Feature maps đa độ phân giải hỗ trợ object nhỏ/lớn | Cần cho ball hoặc symbol nhỏ.
+Small-object Detection | Phát hiện vật thể nhỏ | Detection object chỉ chiếm ít pixel | Bóng và ký hiệu bản vẽ là small objects.
+Anchor | Hộp neo | Bbox mẫu dùng trong một số detector để dự đoán offset | Anchor shape phù hợp dataset giúp localization.
+Anchor-free Detector | Detector không anchor | Dự đoán object không dựa bộ anchor cố định | Nhiều YOLO mới dùng anchor-free head.
+Loss Function | Hàm mất mát | Hàm đo sai khác prediction và ground truth để train | Box loss, classification loss và DFL.
+Classification Loss | Loss phân lớp | Phạt dự đoán sai class | Nhầm referee thành player tăng cls loss.
+Box Regression Loss | Loss hồi quy bbox | Phạt bbox sai vị trí/kích thước | IoU-based loss cho localization.
+Focal Loss | Focal loss | Giảm trọng số mẫu dễ, tập trung mẫu khó/mất cân bằng | Hữu ích khi background hoặc class imbalance lớn.
+Class Imbalance | Mất cân bằng lớp | Một số class có nhiều mẫu hơn đáng kể | Player nhiều hơn ball.
+Hard Negative | Mẫu âm khó | Vùng không phải object nhưng dễ bị model báo nhầm | Logo tròn giống bóng.
+Hard-negative Mining | Khai thác mẫu âm khó | Thu thập FP khó để train lại model | Label thêm vật thể tròn model hay nhầm.
+[CORE] Semantic Segmentation | Phân đoạn ngữ nghĩa | Gán class cho từng pixel, không tách instance cùng class | Segment toàn bộ vùng tường.
+[CORE] Instance Segmentation | Phân đoạn cá thể | Tạo mask riêng cho từng object | Mask riêng từng vết hư hỏng.
+Panoptic Segmentation | Phân đoạn toàn cảnh | Kết hợp semantic và instance segmentation | Phân loại mọi pixel và tách object đếm được.
+Segmentation Mask | Mặt nạ phân đoạn | Ma trận pixel biểu diễn vùng object/class | Mask vết nứt.
+Dice Coefficient | Hệ số Dice | 2|A∩B|/(|A|+|B|), đo overlap mask | Hữu ích đánh giá class nhỏ.
+Pixel Accuracy | Độ chính xác pixel | Tỷ lệ pixel dự đoán đúng | Dễ gây hiểu nhầm khi background chiếm đa số.
+Skeletonization | Làm mảnh xương | Rút vùng line thành đường trung tâm một pixel | Biến mask đường ống thành graph line.
+[CORE] Optical Character Recognition (OCR) | Nhận dạng ký tự quang học | Phát hiện và đọc text từ ảnh/scan | Đọc kích thước và mã cấu kiện trên bản vẽ.
+Text Detection | Phát hiện vùng chữ | Tìm polygon/bbox nơi có text | Xác định vị trí dimension label.
+Text Recognition | Nhận dạng nội dung chữ | Chuyển crop text thành chuỗi ký tự | Đọc “D100” từ vùng đã detect.
+Character Error Rate (CER) | Tỷ lệ lỗi ký tự | Edit distance ký tự chia số ký tự ground truth | Đánh giá OCR mã kỹ thuật.
+Word Error Rate (WER) | Tỷ lệ lỗi từ | Edit distance theo từ chia số từ ground truth | Đánh giá OCR câu/ghi chú.
+End-to-end Field Accuracy | Độ chính xác trường đầu cuối | Trường đúng cả detection, recognition và association | Đọc đúng “D100” và gán đúng đường ống.
+
+
+================================================================================================================
+D. TRACKING, VIDEO VÀ CHUYỂN ĐỘNG
+================================================================================================================
+
+[CORE] Object Tracking | Theo dõi đối tượng | Duy trì vị trí và identity của object qua nhiều frame | Theo dõi một cầu thủ suốt video.
+Tracking-by-Detection | Theo dõi dựa trên detection | Detect từng frame rồi liên kết detection thành track | ByteTrack dùng output YOLO.
+Track | Quỹ đạo theo dõi | Chuỗi trạng thái của cùng một object qua thời gian | Track chứa bbox và position theo frame.
+[CORE] Track ID | Mã theo dõi | ID tạm thời nhận diện object trong một video/camera | ID 12 đại diện một cầu thủ.
+Trajectory | Quỹ đạo | Chuỗi vị trí của object theo thời gian | Dùng trajectory tính distance.
+Data Association | Liên kết dữ liệu | Ghép detection mới với track hiện có | Ghép bằng IoU và motion prediction.
+Association Cost | Chi phí liên kết | Điểm đo mức không phù hợp giữa track và detection | Chi phí có thể là 1-IoU.
+Hungarian Algorithm | Thuật toán Hungary | Tìm phép ghép tối ưu một-một với tổng chi phí nhỏ nhất | Ghép nhiều detection với nhiều track.
+[CORE] ByteTrack | Thuật toán ByteTrack | Tracker liên kết detection score cao rồi dùng score thấp cứu track | Giảm mất ID khi cầu thủ bị che.
+Kalman Filter | Bộ lọc Kalman | Mô hình dự đoán và cập nhật state khi có measurement nhiễu | Dự đoán bbox ở frame kế tiếp.
+State | Trạng thái | Vector mô tả position, size, velocity của track | State có x,y,w,h,vx,vy.
+Motion Model | Mô hình chuyển động | Giả định cách state thay đổi theo thời gian | Constant velocity model.
+Prediction Step | Bước dự đoán | Dự đoán state mới trước measurement | Kalman predict vị trí tiếp theo.
+Update Step | Bước cập nhật | Kết hợp prediction với detection mới | Measurement sửa lại state dự đoán.
+Occlusion | Che khuất | Object bị object khác hoặc cảnh che một phần/toàn phần | Cầu thủ che bóng.
+Lost Track | Track bị mất tạm thời | Tracker chưa ghép được detection nhưng chưa xóa track | Giữ track vài frame khi occlusion.
+Track Lifecycle | Vòng đời track | Quy tắc tạo, active, lost và remove track | Track bị xóa sau max age.
+[CORE] ID Switch | Đổi nhầm ID | Identity của object bị đổi hoặc hai object đổi ID | Làm sai distance và team cache.
+Re-identification (Re-ID) | Tái nhận dạng | Dùng appearance để nhận cùng một object sau mất dấu/khác camera | Nhận cùng công nhân ở camera khác.
+Appearance Embedding | Vector ngoại hình | Vector mô tả màu/hình dáng object để matching | Áo và hình thể hỗ trợ Re-ID.
+Multi-object Tracking (MOT) | Theo dõi đa đối tượng | Theo dõi đồng thời nhiều object cùng loại/khác loại | Theo dõi 22 cầu thủ.
+MOTA | Multiple Object Tracking Accuracy | Metric tổng hợp FP, FN và ID switch, có hạn chế | Dùng đánh giá tracker truyền thống.
+MOTP | Multiple Object Tracking Precision | Độ chính xác localization của matched tracks | Đo bbox track khớp tốt ra sao.
+IDF1 | Identity F1 | F1 dựa trên identity match đúng | Nhạy với duy trì ID.
+HOTA | Higher Order Tracking Accuracy | Metric cân bằng detection và association | Đánh giá tracker toàn diện hơn.
+[CORE] Optical Flow | Luồng quang học | Ước lượng vector chuyển động pixel giữa hai frame | Estimate camera pan.
+Sparse Optical Flow | Luồng quang học thưa | Chỉ theo dõi một tập keypoint | Lucas–Kanade theo dõi corners.
+Dense Optical Flow | Luồng quang học dày | Ước lượng vector cho nhiều/mọi pixel | Dùng phân tích chuyển động toàn ảnh.
+[CORE] Lucas–Kanade Optical Flow | Luồng quang học Lucas–Kanade | Ước lượng chuyển động cục bộ với giả định brightness constancy và motion nhỏ | Repo dùng Pyramidal LK.
+Image Pyramid | Tháp ảnh | Nhiều bản ảnh ở các scale để xử lý chuyển động/kích thước đa mức | Pyramidal LK xử lý motion lớn hơn.
+Brightness Constancy | Giả định bảo toàn độ sáng | Pixel của cùng điểm vật lý có độ sáng gần như không đổi giữa frame | Một giả định của Optical Flow.
+Camera Motion | Chuyển động camera | Pan, tilt, zoom, rotation hoặc translation của camera | Camera pan làm mọi bbox dịch chuyển.
+[CORE] Camera Motion Compensation | Bù chuyển động camera | Ước lượng rồi loại ảnh hưởng camera khỏi chuyển động object | adjusted_position = position - camera movement.
+Pan | Lia ngang | Camera xoay ngang theo cảnh | Camera bóng đá pan theo bóng.
+Tilt | Lia dọc | Camera xoay lên hoặc xuống | Camera nghiêng theo đối tượng cao/thấp.
+Zoom | Thu phóng | Thay đổi tiêu cự làm scale ảnh đổi | Translation-only compensation không xử lý tốt zoom.
+Motion Blur | Nhòe chuyển động | Object/ảnh bị nhòe do chuyển động trong thời gian phơi sáng | Làm bóng khó detect.
+Temporal Smoothing | Làm mượt theo thời gian | Kết hợp nhiều frame để giảm dao động prediction | Possession phải ổn định N frame.
+Interpolation | Nội suy | Ước lượng giá trị thiếu giữa các giá trị đã biết | Nội suy bbox bóng bị mất vài frame.
+Linear Interpolation | Nội suy tuyến tính | Giả định giá trị thay đổi theo đường thẳng giữa hai điểm | Không tốt khi bóng đổi hướng mạnh.
+Timestamp | Dấu thời gian | Thời điểm tương ứng frame/event | time = frame index / FPS.
+Latency | Độ trễ | Thời gian từ input tới output | Real-time cần p95 latency thấp.
+Throughput | Thông lượng | Số input xử lý trong một đơn vị thời gian | Batch inference tăng frames/second.
+Real-time | Thời gian thực | Xử lý đáp ứng deadline của luồng trực tiếp | Camera 25 FPS yêu cầu pipeline theo kịp.
+Offline Processing | Xử lý ngoại tuyến | Xử lý file có sẵn, ưu tiên throughput hơn latency tức thời | Phân tích video sau trận.
+
+
+================================================================================================================
+E. HÌNH HỌC ẢNH, TỌA ĐỘ VÀ CALIBRATION
+================================================================================================================
+
+[CORE] Coordinate System | Hệ tọa độ | Quy ước biểu diễn vị trí bằng các trục và đơn vị | Pixel coordinate khác world coordinate.
+Pixel Coordinates | Tọa độ pixel | Vị trí x,y trên ảnh theo pixel | Điểm chân cầu thủ tại (800,700).
+Image Plane | Mặt phẳng ảnh | Mặt phẳng 2D nơi cảnh 3D được chiếu lên | Detection tồn tại trên image plane.
+World Coordinates | Tọa độ thế giới | Vị trí trong hệ vật lý với đơn vị thật | Vị trí trên sân theo mét.
+Camera Coordinates | Tọa độ camera | Hệ 3D có gốc tại camera | Dùng trong mô hình chiếu camera.
+[CORE] Perspective | Phối cảnh | Hiện tượng object xa nhỏ hơn và đường song song có thể hội tụ | 100 pixel không luôn bằng cùng số mét.
+Perspective Projection | Phép chiếu phối cảnh | Ánh xạ điểm 3D qua camera thành điểm 2D | Camera biến sân 3D thành ảnh.
+[CORE] Perspective Transformation | Biến đổi phối cảnh | Biến đổi projective giữa hai mặt phẳng | Chuyển vùng sân xiên thành top-down plane.
+[CORE] Homography | Phép đồng dạng xạ/ma trận biến đổi mặt phẳng | Ma trận 3×3 ánh xạ điểm giữa hai mặt phẳng projective | Pixel foot point → tọa độ sân.
+Homography Matrix | Ma trận homography | Ma trận H có 8 bậc tự do sau khi bỏ scale | Cần tối thiểu bốn cặp điểm không thẳng hàng.
+Correspondence Point | Điểm tương ứng | Cặp điểm cùng vị trí vật lý ở hai ảnh/hệ tọa độ | Góc sân trong ảnh và tọa độ thật.
+Degrees of Freedom (DoF) | Bậc tự do | Số tham số độc lập của mô hình | Homography có 8 DoF tới scale.
+Collinear Points | Các điểm thẳng hàng | Điểm nằm trên cùng một đường thẳng | Bốn điểm homography không được cùng thẳng hàng.
+Ground Plane | Mặt phẳng mặt đất | Mặt phẳng tham chiếu nơi object tiếp xúc | Foot point nằm gần ground plane.
+Bird’s-eye View | Góc nhìn từ trên xuống | Biểu diễn top-down của mặt phẳng | Perspective transform có thể tạo bird’s-eye view.
+Affine Transformation | Biến đổi affine | Biến đổi giữ đường thẳng và tính song song, gồm translation/rotation/scale/shear | Align ảnh khi perspective không lớn.
+Translation | Phép tịnh tiến | Dịch chuyển mọi điểm cùng vector | Camera motion code hiện xấp xỉ translation.
+Rotation | Phép quay | Xoay điểm quanh tâm/gốc | Camera rotation cần model hơn translation.
+Scale | Tỷ lệ/thu phóng | Hệ số chuyển đổi kích thước | Pixel-to-meter cần scale/calibration.
+Shear | Phép xiên | Biến đổi làm hình chữ nhật thành hình bình hành | Một thành phần affine transform.
+Projective Transformation | Biến đổi xạ ảnh | Biến đổi tổng quát giữa hai mặt phẳng, có thể làm đường song song hội tụ | Homography là projective transform.
+[CORE] Camera Calibration | Hiệu chuẩn camera | Ước lượng intrinsic, distortion và đôi khi extrinsic | Dùng checkerboard để calibrate camera.
+Intrinsic Parameters | Tham số nội tại | Focal length, principal point, skew mô tả camera bên trong | Ma trận camera K chứa fx,fy,cx,cy.
+Extrinsic Parameters | Tham số ngoại tại | Rotation và translation đặt camera so với thế giới | R,t biến world sang camera coordinates.
+Focal Length | Tiêu cự | Tham số ảnh hưởng góc nhìn và scale chiếu | fx và fy tính theo pixel.
+Principal Point | Điểm chính | Vị trí giao trục quang học với image plane | Thường gần tâm ảnh.
+Lens Distortion | Méo ống kính | Sai lệch khỏi mô hình pinhole do lens | Đường thẳng gần mép ảnh bị cong.
+Radial Distortion | Méo xuyên tâm | Barrel/pincushion theo khoảng cách tới tâm ảnh | Cần undistort trước đo chính xác.
+Tangential Distortion | Méo tiếp tuyến | Méo do lens/sensor lắp lệch | Một phần distortion coefficients.
+Undistortion | Khử méo | Hiệu chỉnh ảnh dựa trên calibration parameters | Làm line thẳng trở lại gần đúng.
+Pinhole Camera Model | Mô hình camera lỗ kim | Mô hình toán học cơ bản chiếu 3D sang 2D | Không gồm lens distortion.
+[CORE] RANSAC | Random Sample Consensus | Fit model robust bằng cách thử tập nhỏ và chọn nhiều inlier nhất | Estimate homography dù matching có outlier.
+Inlier | Điểm phù hợp mô hình | Sample có sai số dưới threshold của model | Good feature match sau RANSAC.
+Outlier | Điểm ngoại lai | Sample không phù hợp mô hình, có thể do matching sai | Feature trên cầu thủ không đại diện background.
+Reprojection Error | Sai số chiếu lại | Khoảng cách giữa điểm thật và điểm sau khi model chiếu | Đánh giá chất lượng homography/calibration.
+Euclidean Distance | Khoảng cách Euclid | Căn bậc hai tổng bình phương chênh lệch các trục | Tính distance giữa hai vị trí sân.
+Spatial Relationship | Quan hệ không gian | Quan hệ như inside, adjacent, intersect, connected, above | Cửa nằm trên tường; hai phòng kề nhau.
+Topology | Tô-pô/cấu trúc liên kết | Quan hệ kết nối không phụ thuộc hình dạng đo chi tiết | Room graph giữ adjacency.
+Geometry | Hình học | Vị trí, hình dạng, kích thước và quan hệ không gian | Wall polygon và opening coordinates.
+Polygon | Đa giác | Shape kín tạo từ chuỗi đỉnh | Room boundary là polygon.
+Polyline | Đường gấp khúc | Chuỗi đoạn thẳng nối nhau, không nhất thiết kín | Đường ống biểu diễn bằng polyline.
+
+
+================================================================================================================
+F. CLUSTERING VÀ MÁY HỌC CƠ BẢN
+================================================================================================================
+
+[CORE] Supervised Learning | Học có giám sát | Train bằng input đi kèm ground-truth label | Train YOLO bằng bbox và class.
+[CORE] Unsupervised Learning | Học không giám sát | Tìm cấu trúc trong dữ liệu không có label đích | K-Means phân màu áo.
+Semi-supervised Learning | Học bán giám sát | Kết hợp ít dữ liệu có nhãn và nhiều dữ liệu chưa nhãn | Pseudo-label thêm video chưa annotate.
+Self-supervised Learning | Học tự giám sát | Tạo mục tiêu học từ chính dữ liệu không cần label thủ công | Pretrain visual representation.
+[CORE] Clustering | Phân cụm | Nhóm sample tương tự mà không cần class label | Gom màu cầu thủ thành hai đội.
+[CORE] K-Means | Thuật toán K trung bình | Gán điểm vào K centroid gần nhất rồi cập nhật centroid lặp lại | K=2 tách áo và nền.
+Cluster | Cụm | Nhóm điểm dữ liệu tương tự | Một cluster là màu áo.
+Centroid | Tâm cụm | Vector trung bình đại diện một cluster | Centroid BGR dùng làm team color.
+Feature Vector | Vector đặc trưng | Dãy số biểu diễn sample cho model/thuật toán | Màu [B,G,R] là vector ba chiều.
+Distance Metric | Thước đo khoảng cách | Hàm đo độ khác nhau giữa vector | K-Means thường dùng Euclidean distance.
+Initialization | Khởi tạo | Cách chọn giá trị ban đầu của thuật toán tối ưu | k-means++ chọn centroid khởi tạo tốt hơn ngẫu nhiên.
+Convergence | Hội tụ | Trạng thái thuật toán không còn thay đổi đáng kể | K-Means dừng khi centroid ổn định.
+Train Set | Tập huấn luyện | Dữ liệu dùng cập nhật trọng số model | Dataset các frame có label.
+Validation Set | Tập xác thực | Dữ liệu dùng tune và chọn model, không update trực tiếp | Chọn confidence threshold trên validation.
+Test Set | Tập kiểm thử | Dữ liệu giữ độc lập để báo cáo cuối | Test trên trận chưa thấy.
+[CORE] Data Leakage | Rò rỉ dữ liệu | Thông tin test/validation vô tình xuất hiện trong train | Frame 100 train và frame 101 validation.
+Group Split | Chia theo nhóm | Chia dataset theo video/site/project thay vì từng sample | Một trận chỉ thuộc một split.
+Cross-validation | Xác thực chéo | Train/evaluate nhiều fold để đo ổn định | Group K-fold theo project.
+Overfitting | Quá khớp | Model học quá sát train và kém trên dữ liệu mới | Train metric cao nhưng test thấp.
+Underfitting | Thiếu khớp | Model chưa học đủ pattern của cả train | Cả train và validation đều thấp.
+Bias | Độ lệch hệ thống | Sai lệch có hướng do data/model/measurement | Speed luôn cao do FPS sai.
+Variance | Phương sai | Mức prediction thay đổi mạnh theo dữ liệu train/input | Model không ổn định giữa camera.
+Regularization | Điều chuẩn | Kỹ thuật giảm overfitting | Weight decay hoặc augmentation.
+Transfer Learning | Học chuyển giao | Bắt đầu từ model pretrained rồi fine-tune nhiệm vụ mới | Train YOLO từ yolov5x.pt.
+Pretrained Model | Mô hình tiền huấn luyện | Model đã học từ dataset lớn trước nhiệm vụ mới | YOLO checkpoint pretrained.
+Epoch | Chu kỳ huấn luyện | Một lượt model đi qua toàn bộ train set | Artifact train 100 epochs.
+Batch Size | Kích thước batch | Số sample xử lý trước một update gradient | Batch size 4.
+Learning Rate | Tốc độ học | Độ lớn bước cập nhật trọng số | LR quá cao có thể không hội tụ.
+Optimizer | Bộ tối ưu | Thuật toán cập nhật trọng số từ gradient | SGD, Adam hoặc auto optimizer.
+Gradient | Đạo hàm gradient | Hướng thay đổi loss theo tham số | Backpropagation tính gradient.
+Backpropagation | Lan truyền ngược | Tính gradient từ loss qua network | Dùng để train neural network.
+Checkpoint | Điểm lưu mô hình | File lưu trọng số và trạng thái tại epoch | best.pt là model checkpoint.
+Random Seed | Hạt giống ngẫu nhiên | Giá trị giúp tái tạo sampling/initialization gần nhất quán | Train args dùng seed 0.
+Mixed Precision (AMP) | Độ chính xác hỗn hợp | Dùng FP16/FP32 để tăng tốc và giảm memory khi train | Artifact bật AMP.
+
+
+================================================================================================================
+G. AEC, CÔNG TRÌNH VÀ BẢN VẼ
+================================================================================================================
+
+[CORE] Architecture, Engineering and Construction (AEC) | Kiến trúc, kỹ thuật và xây dựng | Ngành bao gồm thiết kế, kỹ thuật, thi công và vận hành công trình | CV dùng đọc bản vẽ và giám sát site.
+Architect | Kiến trúc sư | Người thiết kế không gian, hình thức và hồ sơ kiến trúc | End user có thể review generated layout.
+Engineer | Kỹ sư | Chuyên gia thiết kế/kiểm tra hệ kết cấu hoặc hệ kỹ thuật | Kỹ sư kiểm tra constraint đường ống.
+Construction Site | Công trường | Nơi thi công thực tế | Camera giám sát PPE tại site.
+[CORE] Computer-Aided Design (CAD) | Thiết kế hỗ trợ máy tính | Dữ liệu/công cụ tạo bản vẽ hình học kỹ thuật | DWG/DXF chứa line, layer và text.
+[CORE] Building Information Modeling (BIM) | Mô hình thông tin công trình | Mô hình số gồm geometry, semantic object và thuộc tính vòng đời | Tường BIM có loại, kích thước và vật liệu.
+Drawing | Bản vẽ | Tài liệu đồ họa thể hiện thiết kế/kỹ thuật | Floor plan hoặc MEP drawing.
+Floor Plan | Mặt bằng | Bản vẽ nhìn từ trên thể hiện phòng, tường và opening | Trích room polygons từ floor plan.
+Elevation | Mặt đứng | Hình chiếu đứng của công trình | Nhận facade element.
+Section | Mặt cắt | Hình cắt thể hiện cấu tạo bên trong | Đọc cao độ và layer sàn.
+Title Block | Khung tên | Vùng chứa tên dự án, tỷ lệ, revision và metadata | OCR title block để lấy sheet number.
+Legend | Bảng chú giải | Bảng ánh xạ symbol, line style với ý nghĩa | Dùng legend hỗ trợ class symbol.
+Annotation | Chú thích | Text, dimension hoặc ký hiệu bổ sung thông tin | Room label và material note.
+Dimension | Kích thước | Thông tin độ dài/góc/cao độ trên bản vẽ | OCR dimension “3000 mm”.
+Scale | Tỷ lệ bản vẽ | Quan hệ kích thước trên bản vẽ với kích thước thật | 1:100 nghĩa 1 đơn vị trên bản vẽ bằng 100 thật.
+Unit | Đơn vị | Hệ đo như mm, cm, m, inch | Phải chuẩn hóa trước quantity takeoff.
+Layer | Lớp bản vẽ | Nhóm entity cùng mục đích/thuộc tính trong CAD | Wall layer khác electrical layer.
+Entity | Thực thể CAD/BIM | Đối tượng dữ liệu như line, arc, text, block | Một door block là entity.
+Block | Khối CAD | Nhóm entity tái sử dụng như một symbol | Door symbol có thể là block.
+Symbol | Ký hiệu | Hình đồ họa đại diện thiết bị/thành phần | Ký hiệu ổ cắm điện.
+Wall | Tường | Phần tử ngăn/bao không gian | Representation cần centerline hoặc polygon.
+Opening | Lỗ mở | Khoảng trống trong wall/slab như cửa đi/cửa sổ | Door phải liên kết đúng wall.
+Room | Phòng/không gian | Vùng không gian có boundary và thuộc tính | Room graph chứa node phòng.
+Adjacency | Quan hệ kề nhau | Hai vùng/object có chung biên hoặc kết nối gần | Hai phòng kề nhau qua một wall.
+Connectivity | Tính kết nối | Quan hệ các thành phần được nối thành hệ thống | Pipe nối equipment và valve.
+[CORE] Graph Representation | Biểu diễn đồ thị | Dữ liệu gồm node và edge thể hiện object và quan hệ | Room graph: room là node, cửa là edge.
+Node | Nút | Thực thể trong graph | Equipment hoặc room là node.
+Edge | Cạnh | Quan hệ/kết nối giữa hai node | Pipe segment là edge.
+Constraint | Ràng buộc | Điều kiện thiết kế bắt buộc hoặc mong muốn | Cửa phải nằm trên wall.
+Design Constraint | Ràng buộc thiết kế | Quy tắc về geometry, code hoặc nghiệp vụ thiết kế | Phòng phải đạt diện tích tối thiểu.
+Constraint Validation | Kiểm tra ràng buộc | Xác minh output thỏa các rule đã định nghĩa | Báo polygon tự giao hoặc thiếu lối thoát.
+Building Code | Quy chuẩn xây dựng | Bộ yêu cầu pháp lý/kỹ thuật cho công trình | Khoảng cách thoát hiểm phải đạt quy chuẩn.
+Clash Detection | Phát hiện xung đột | Tìm hai hệ/phần tử chiếm cùng không gian không hợp lệ | Ống xuyên dầm.
+MEP | Cơ điện nước | Mechanical, Electrical and Plumbing systems | Trích đường ống và thiết bị từ MEP plan.
+Structural Drawing | Bản vẽ kết cấu | Bản vẽ dầm, cột, sàn và reinforcement | Detect column grid.
+Architectural Drawing | Bản vẽ kiến trúc | Bản vẽ không gian, tường, cửa và hoàn thiện | Parse floor plan.
+As-designed | Theo thiết kế | Trạng thái dự kiến trong hồ sơ thiết kế | BIM design model.
+As-built | Hoàn công/thực tế thi công | Trạng thái công trình thực tế sau/đang thi công | So ảnh site với design.
+Progress Monitoring | Giám sát tiến độ | Theo dõi phần việc/cấu kiện đã hoàn thành theo thời gian | Segment cấu kiện đã lắp đặt.
+Change Detection | Phát hiện thay đổi | Xác định vùng/entity thêm, xóa hoặc sửa giữa hai thời điểm/revision | So revision A và B.
+Revision | Phiên bản sửa đổi | Một lần phát hành/cập nhật bản vẽ | Align hai revision trước diff.
+[CORE] Image Registration | Đăng ký/căn chỉnh ảnh | Đưa hai ảnh về cùng hệ tọa độ để so sánh | RANSAC homography align hai bản scan.
+Deskew | Chỉnh nghiêng | Xoay bản scan về hướng chuẩn | Dùng dominant Hough lines tìm góc.
+Vector Parsing | Phân tích dữ liệu vector | Đọc path/text/layer trực tiếp từ PDF/CAD | Chính xác hơn OCR nếu PDF có vector thật.
+Rasterization | Raster hóa | Chuyển vector/page thành ảnh pixel | Render PDF ở DPI xác định.
+DPI (Dots Per Inch) | Số điểm trên inch | Mật độ render/scan ảnh | DPI cao giữ text nhỏ nhưng tăng memory.
+[CORE] Tiled Inference | Suy luận chia ô | Chia ảnh lớn thành tile, infer rồi ghép global result | Bản vẽ 20k×20k không resize thẳng về 640.
+Tile | Ô ảnh | Một crop nhỏ từ ảnh lớn dùng inference | Tile 1024×1024 có overlap.
+Overlap | Phần chồng lấn | Vùng chung giữa các tile | Tránh object bị cắt đúng biên.
+Global Coordinates | Tọa độ toàn cục | Tọa độ trên ảnh/bản vẽ gốc thay vì trong tile | bbox_global = bbox_tile + tile_offset.
+Merge | Hợp kết quả | Gộp prediction trùng từ nhiều tile/model | Class-aware NMS sau tiled inference.
+Quantity Takeoff | Bóc tách khối lượng | Tính số lượng/chiều dài/diện tích vật liệu hoặc cấu kiện | Đếm cửa và tổng chiều dài wall.
+Personal Protective Equipment (PPE) | Thiết bị bảo hộ cá nhân | Mũ, áo phản quang, dây an toàn và thiết bị bảo hộ | Detect person–wears–helmet.
+Safety Monitoring | Giám sát an toàn | Phát hiện vi phạm/rủi ro tại công trường | Cảnh báo người vào vùng nguy hiểm.
+Restricted Zone | Vùng hạn chế/nguy hiểm | Polygon khu vực không được vào hoặc cần điều kiện | Track người cắt qua ROI.
+Defect Detection | Phát hiện khuyết tật | Tìm lỗi như nứt, ăn mòn, thấm hoặc bong tróc | Segmentation thường hợp vết nứt hơn bbox.
+Crack Segmentation | Phân đoạn vết nứt | Xác định chính xác pixel của vết nứt | Đo chiều dài/độ rộng sau calibration.
+Human-in-the-Loop Review | Chuyên gia kiểm duyệt | Kiến trúc sư/kỹ sư sửa và chốt output AI | Correction quay lại active learning.
+Editable Output | Đầu ra chỉnh sửa được | Output là object/geometry có thể thao tác, không chỉ ảnh | Trả polygon và graph thay vì ảnh render duy nhất.
+Generative Geometry | Sinh hình học | Sinh object/shape/layout có cấu trúc bằng rule hoặc model | Sinh room polygons có constraint.
+Image-to-Script | Từ ảnh sang script | Chuyển visual input thành lệnh/code có cấu trúc | Bản vẽ → CAD/BIM commands.
+2D-to-3D Reconstruction | Tái dựng 2D sang 3D | Ước lượng geometry 3D từ ảnh/bản vẽ 2D | Project bóng đá không tương đương bài toán này.
+
+
+================================================================================================================
+H. BACKEND, API VÀ KIẾN TRÚC HỆ THỐNG
+================================================================================================================
+
+[CORE] Backend | Hệ thống phía máy chủ | Thành phần xử lý logic, data và integration phía server | Backend tạo task và gọi agent service.
+Frontend | Giao diện phía người dùng | Thành phần trình bày UI và nhận thao tác người dùng | React UI cho review artifacts.
+[CORE] Application Programming Interface (API) | Giao diện lập trình ứng dụng | Contract để các service trao đổi request/response | Frontend gọi REST API backend.
+REST API | API kiểu REST | API dùng HTTP resource/method như GET/POST/PATCH/DELETE | POST /tasks tạo task mới.
+Endpoint | Điểm cuối API | Một route cụ thể cung cấp chức năng | /api/workflows/run-agent-1.
+Request | Yêu cầu | Dữ liệu client gửi service | Request chứa project_id và document_ids.
+Response | Phản hồi | Dữ liệu service trả client | Response chứa task_id và status.
+HTTP Method | Phương thức HTTP | Động từ thể hiện thao tác | GET đọc, POST tạo, PATCH sửa, DELETE xóa.
+Status Code | Mã trạng thái | Mã HTTP mô tả kết quả request | 200 thành công, 400 input sai, 500 lỗi server.
+API Contract | Hợp đồng API | Định nghĩa request, response, lỗi và version | Frontend/backend phải thống nhất schema.
+Serialization | Tuần tự hóa | Chuyển object thành format truyền/lưu được | Python object thành JSON.
+Deserialization | Giải tuần tự | Chuyển dữ liệu truyền/lưu thành object | Parse JSON request vào schema.
+[CORE] FastAPI | Framework API Python | Framework Python type-aware cho API hiệu năng tốt | Agent service dùng FastAPI.
+Express.js | Framework web Node.js | Framework tối giản xây API/backend bằng JavaScript | Backend orchestration dùng Express.
+Microservice | Vi dịch vụ | Service độc lập theo trách nhiệm, giao tiếp qua network | Frontend, backend và agents là service riêng.
+Monolith | Kiến trúc nguyên khối | Nhiều chức năng triển khai trong một ứng dụng | Đơn giản vận hành hơn ở quy mô nhỏ.
+[CORE] Server-Sent Events (SSE) | Sự kiện máy chủ gửi | Kết nối HTTP một chiều server→client để stream update | Hiển thị tiến trình agent real time.
+WebSocket | Kết nối hai chiều liên tục | Protocol full-duplex client và server | Cần khi hai phía gửi message thường xuyên.
+Streaming Response | Phản hồi dạng luồng | Server gửi output từng phần thay vì chờ toàn bộ | Stream trạng thái stage đang chạy.
+Timeout | Hết thời gian | Request/job vượt thời gian cho phép | LLM task dài cần async hoặc SSE.
+Asynchronous Processing | Xử lý bất đồng bộ | Không block luồng chờ task dài hoàn tất | Tạo job rồi poll/stream status.
+Queue | Hàng đợi | Buffer job chờ worker xử lý | Agent jobs vào task queue.
+Worker | Tiến trình xử lý | Consumer lấy job từ queue và thực thi | GPU worker chạy inference.
+Database | Cơ sở dữ liệu | Hệ thống lưu dữ liệu có truy vấn | PostgreSQL lưu project/task/artifact.
+Relational Database | CSDL quan hệ | Lưu table và quan hệ có schema | Supabase PostgreSQL.
+Object Storage | Kho lưu object | Lưu file/blob lớn theo key | Lưu PRD, PDF hoặc video.
+Persistence | Lưu trữ bền vững | Dữ liệu còn tồn tại sau process restart | Task status lưu trong database.
+Authentication | Xác thực | Xác minh người dùng là ai | Login email/OAuth.
+Authorization | Phân quyền | Xác định người dùng được làm gì | Viewer không được chạy/delete project.
+Role-Based Access Control (RBAC) | Phân quyền theo vai trò | Gán quyền qua owner/admin/editor/viewer | Project membership dùng RBAC.
+Rate Limiting | Giới hạn tần suất | Hạn chế số request trong thời gian | Chống abuse API/model quota.
+Quota | Hạn mức | Giới hạn tài nguyên người dùng được sử dụng | Credits giới hạn agent runs.
+Dependency | Phụ thuộc thư viện | Package/service mà code cần | requirements.txt khóa dependency Python.
+Dependency Lock | Khóa phiên bản phụ thuộc | Ghi phiên bản chính xác để tái tạo môi trường | Lock file tránh update làm hỏng build.
+Environment Variable | Biến môi trường | Cấu hình ngoài source code | API key và database URL.
+Configuration | Cấu hình | Tham số thay đổi theo môi trường/use case | FPS, model path và threshold.
+Container | Container | Gói ứng dụng và runtime cô lập | Docker container cho agent service.
+[CORE] Docker | Nền tảng container | Công cụ đóng gói app cùng dependency | Docker Compose chạy ba services.
+Docker Compose | Điều phối container cục bộ | Khai báo và chạy nhiều container cùng nhau | Frontend, backend, agents.
+Reverse Proxy | Proxy ngược | Nhận traffic ngoài và chuyển vào service nội bộ | Nginx route HTTPS tới backend/frontend.
+CI/CD | Tích hợp và triển khai liên tục | Tự động test/build/deploy khi code thay đổi | CI chạy test trước merge.
+Logging | Ghi log | Ghi event có timestamp/context để debug | Log task_id, model và latency.
+Structured Logging | Log có cấu trúc | Log dạng JSON/field thay vì text tùy ý | Dễ query lỗi theo project_id.
+Metric | Chỉ số vận hành | Giá trị số theo dõi hệ thống | Error rate, p95 latency, throughput.
+Distributed Tracing | Theo vết phân tán | Theo một request qua nhiều service | Trace frontend→backend→agents→LLM.
+Error Handling | Xử lý lỗi | Phát hiện, phân loại và phản hồi lỗi an toàn | Trả 422 khi schema invalid.
+Validation | Xác thực dữ liệu | Kiểm tra input/output thỏa quy tắc | Kiểm tra bbox và schema.
+Cache | Bộ nhớ đệm | Lưu kết quả để tránh tính lại | Cache tracks giúp debug nhanh.
+Cache Invalidation | Làm mất hiệu lực cache | Xóa/đánh dấu cache cũ khi input/config đổi | Hash video+model+config.
+Hash | Hàm băm | Dấu vân tay cố định cho nội dung | Dùng nhận cache thuộc đúng video.
+
+
+================================================================================================================
+I. PRODUCTION, HIỆU NĂNG VÀ MLOPS
+================================================================================================================
+
+[CORE] Production-ready | Sẵn sàng vận hành thực tế | Có reliability, security, monitoring, test và quy trình deploy phù hợp | Repo bóng đá hiện là prototype, chưa production-ready.
+Prototype | Nguyên mẫu | Phiên bản chứng minh ý tưởng nhanh, chưa đầy đủ vận hành | Football pipeline là portfolio prototype.
+Proof of Concept (PoC) | Bằng chứng khả thi | Thử nghiệm chứng minh kỹ thuật/bài toán có thể làm được | PoC đọc symbol từ một loại drawing.
+Minimum Viable Product (MVP) | Sản phẩm khả dụng tối thiểu | Phiên bản nhỏ nhất tạo giá trị và lấy feedback người dùng | Một workflow AEC nhỏ có review UI.
+Baseline | Mốc cơ sở | Cách đơn giản có thể đo dùng để so cải tiến | Parser + rules trước generative model.
+Scalability | Khả năng mở rộng | Khả năng giữ hiệu năng khi tải/data tăng | Worker queue scale theo số job.
+Reliability | Độ tin cậy vận hành | Khả năng hoạt động đúng và ổn định theo thời gian | Retry, timeout và monitoring tăng reliability.
+Availability | Tính sẵn sàng | Tỷ lệ thời gian service có thể phục vụ | 99.9% uptime.
+Fault Tolerance | Khả năng chịu lỗi | Hệ thống tiếp tục/khôi phục khi thành phần lỗi | Job retry không mất artifact đã hoàn thành.
+Graceful Degradation | Suy giảm có kiểm soát | Giảm chức năng thay vì hỏng toàn hệ thống | Model phụ lỗi thì trả output baseline.
+Model Serving | Phục vụ mô hình | Hạ tầng nhận input và trả prediction | FastAPI/Triton/TorchServe endpoint.
+Model Registry | Kho quản lý model | Lưu model version, metadata và trạng thái | Biết artifact dùng model nào.
+Model Version | Phiên bản mô hình | ID của checkpoint/config được triển khai | v1.3-yolo-football.
+Data Versioning | Quản lý phiên bản dữ liệu | Theo dõi dataset/split/label thay đổi | Dataset v2 bổ sung hard negatives.
+Reproducibility | Khả năng tái lập | Có thể tái tạo run bằng code/data/config/version | Lưu seed, args, commit và checkpoint.
+Drift | Sự trôi phân phối/hiệu năng | Input hoặc quan hệ dữ liệu thay đổi sau triển khai | Camera mới làm confidence giảm.
+Data Drift | Trôi dữ liệu | Phân phối input thay đổi | Bản vẽ từ công ty khác có font mới.
+Concept Drift | Trôi khái niệm | Quan hệ input-label thay đổi | Standard symbol thay đổi ý nghĩa.
+Model Monitoring | Giám sát mô hình | Theo dõi input, prediction, latency và quality sau deploy | Monitor confidence và class frequency.
+Active Learning | Học chủ động | Chọn mẫu giá trị cao để con người label rồi train lại | Label prediction uncertainty cao.
+Uncertainty | Độ không chắc chắn | Mức model không tự tin hoặc prediction bất ổn | Đưa sample low confidence vào review.
+Shadow Deployment | Triển khai bóng | Chạy model mới song song nhưng chưa tác động output thật | So v2 với v1 trên traffic thật.
+A/B Testing | Thử nghiệm A/B | Chia traffic giữa hai phương án để so KPI | So hai review workflow.
+Canary Deployment | Triển khai canary | Đưa version mới tới một phần nhỏ traffic trước | 5% projects dùng model mới.
+Rollback | Quay lui phiên bản | Trở về version ổn định khi version mới lỗi | Model registry hỗ trợ rollback.
+GPU | Bộ xử lý đồ họa | Phần cứng song song phù hợp train/inference neural network | YOLO inference nhanh hơn trên GPU.
+VRAM | Bộ nhớ GPU | Bộ nhớ chứa model, tensor và batch | Tile/batch lớn có thể hết VRAM.
+CPU | Bộ xử lý trung tâm | Xử lý logic tổng quát và một số CV/inference | Video decode thường dùng CPU.
+Batch Inference | Suy luận theo lô | Xử lý nhiều sample cùng lúc để tăng throughput | Repo detect 20 frame mỗi batch.
+Mixed Precision Inference | Suy luận độ chính xác hỗn hợp | Dùng FP16 khi phù hợp để tăng tốc/giảm memory | Kiểm tra accuracy trước deploy.
+Quantization | Lượng tử hóa | Giảm độ chính xác số như FP32→INT8 để tăng tốc/giảm size | Có thể làm small-object accuracy giảm.
+ONNX | Định dạng trao đổi model | Format trung gian để chạy model trên nhiều runtime | Export YOLO sang ONNX.
+TensorRT | Runtime tối ưu NVIDIA | Tối ưu inference trên GPU NVIDIA | Giảm latency detection.
+Profiling | Đo phân rã hiệu năng | Xác định thời gian/memory từng stage | Đo decode, preprocess, model và NMS.
+p50 Latency | Trung vị độ trễ | 50% request nhanh hơn giá trị này | Thể hiện trải nghiệm điển hình.
+p95 Latency | Phân vị 95 độ trễ | 95% request nhanh hơn giá trị này | Phát hiện tail latency.
+Memory Footprint | Mức dùng bộ nhớ | RAM/VRAM cần khi chạy | Load toàn video làm RAM tăng tuyến tính.
+Streaming | Xử lý luồng | Xử lý dữ liệu lần lượt/chunk thay vì toàn bộ | Video generator giữ ít frame trong RAM.
+Backpressure | Áp lực ngược | Cơ chế hạn chế producer khi consumer xử lý không kịp | Queue đầy thì giảm/đợi input.
+Frame Dropping | Bỏ frame | Bỏ một số frame để giữ deadline real-time | Detect mỗi N frame và track ở giữa.
+
+
+================================================================================================================
+J. EVALUATION, THỐNG KÊ VÀ CHẤT LƯỢNG
+================================================================================================================
+
+[CORE] Ground Truth | Nhãn chuẩn tham chiếu | Kết quả được coi là đúng để so prediction | Bbox do annotator/reviewer xác nhận.
+Annotation | Gán nhãn | Quá trình tạo ground truth cho dữ liệu | Vẽ bbox player và ball.
+Annotation Guideline | Hướng dẫn gán nhãn | Quy tắc nhất quán về class, bbox và case mơ hồ | Quy định ball bị che bao nhiêu vẫn label.
+Annotator | Người gán nhãn | Người tạo label cho dữ liệu | Annotator dùng CVAT.
+Reviewer | Người kiểm duyệt | Người kiểm tra label/output của annotator/model | Senior QA review YAML.
+Inter-annotator Agreement | Mức đồng thuận người gán nhãn | Đo mức hai annotator thống nhất | Thấp nghĩa guideline mơ hồ.
+[CORE] Sample Size | Cỡ mẫu | Số đơn vị độc lập trong evaluation | Phải biết N YAML khi báo 88,4%.
+Population | Tổng thể | Toàn bộ nhóm đối tượng muốn suy luận kết quả | Tất cả PRD/use case mục tiêu.
+Sample | Mẫu | Một đơn vị được quan sát/đánh giá | Một file YAML hoặc một drawing sheet.
+Pass Criterion | Tiêu chí đạt | Điều kiện rõ để một mẫu được tính pass | YAML chạy ngay không cần chỉnh sửa.
+Failure Mode | Kiểu lỗi | Nhóm cách hệ thống thất bại | Sai element ID hoặc thiếu assertion.
+Error Analysis | Phân tích lỗi | Phân nhóm FP/FN/failure để tìm nguyên nhân | Xem lỗi theo small object/occlusion.
+Root Cause | Nguyên nhân gốc | Nguyên nhân sâu tạo lỗi, không chỉ triệu chứng | FPS hard-code gây speed bias.
+Ablation Study | Thử nghiệm loại bỏ thành phần | So hệ thống có/không một module để đo đóng góp | So speed với và không camera compensation.
+Benchmark | Bộ chuẩn đánh giá | Dataset/protocol cố định để so model/phương pháp | Zero-shot benchmark cần prompt/model cố định.
+Metric | Chỉ số đo lường | Đại lượng định lượng chất lượng/hiệu năng | mAP, CER, latency, edit time.
+[CORE] Business Metric | Chỉ số nghiệp vụ | Metric phản ánh giá trị/rủi ro thực tế | Thời gian QA tiết kiệm.
+Technical Metric | Chỉ số kỹ thuật | Metric đo một thuộc tính hệ thống/model | mAP hoặc p95 latency.
+Proxy Metric | Chỉ số thay thế | Metric gần với mục tiêu nhưng không đo trực tiếp mục tiêu cuối | YAML parse rate không bằng logic correctness.
+Success Rate | Tỷ lệ thành công | Số mẫu pass chia tổng mẫu theo tiêu chí cụ thể | 88,4% first-run execution.
+Accuracy | Độ chính xác tổng | Tỷ lệ prediction đúng; cần định nghĩa rõ với từng bài toán | Không nên gọi mAP là accuracy.
+Mean Absolute Error (MAE) | Sai số tuyệt đối trung bình | Trung bình |prediction-ground truth| | Đánh giá speed theo km/h.
+Root Mean Squared Error (RMSE) | Căn sai số bình phương trung bình | Phạt sai số lớn mạnh hơn MAE | Đánh giá coordinate error.
+Bias Error | Sai số lệch | Sai số trung bình có hướng | Speed luôn thấp vì dùng FPS sai.
+Confidence Interval | Khoảng tin cậy | Khoảng ước lượng uncertainty của metric mẫu | Cỡ mẫu nhỏ cho khoảng tin cậy rộng.
+Statistical Significance | Ý nghĩa thống kê | Mức bằng chứng chênh lệch khó do ngẫu nhiên | Pilot 28 người chưa đủ kết luận PMF mạnh.
+Data Distribution | Phân phối dữ liệu | Cách mẫu/giá trị xuất hiện trong dataset | Test phải đại diện camera/site thật.
+Out-of-Distribution (OOD) | Ngoài phân phối | Input khác đáng kể dữ liệu train | Symbol standard mới chưa từng thấy.
+Edge Case | Trường hợp biên | Tình huống hiếm hoặc cực đoan dễ làm hệ thống lỗi | Bóng mất toàn video.
+Happy Path | Luồng thành công chuẩn | Kịch bản chính với input hợp lệ | Login đúng tài khoản.
+Negative Case | Trường hợp âm/lỗi | Kịch bản input hoặc hành động không hợp lệ | Thiếu password.
+Regression Test | Kiểm thử hồi quy | Test bảo đảm chức năng cũ không hỏng sau thay đổi | Prompt mới vẫn sinh đúng expected fields.
+Unit Test | Kiểm thử đơn vị | Test một hàm/module nhỏ cô lập | Test measure_distance.
+Integration Test | Kiểm thử tích hợp | Test nhiều component giao tiếp | Backend gọi agent và lưu artifact.
+End-to-End Test (E2E) | Kiểm thử đầu cuối | Test toàn flow gần môi trường thật | Upload PRD tới export YAML.
+Acceptance Test | Kiểm thử chấp nhận | Xác nhận hệ thống đáp ứng yêu cầu người dùng/nghiệp vụ | QA xác nhận artifact dùng được.
+
+
+================================================================================================================
+K. PRODUCT VÀ CÁCH TIẾP CẬN BÀI TOÁN
+================================================================================================================
+
+[CORE] Problem Definition | Xác định bài toán | Làm rõ người dùng, quyết định, input, output, constraint và cost of error | Bước đầu trước chọn model AEC.
+Use Case | Trường hợp sử dụng | Quy trình cụ thể nơi hệ thống tạo giá trị | Tự động trích room graph từ floor plan.
+End User | Người dùng cuối | Người trực tiếp dùng hoặc chịu tác động output | Kiến trúc sư, QA hoặc kỹ sư site.
+Stakeholder | Bên liên quan | Người/nhóm có lợi ích hoặc ảnh hưởng tới hệ thống | Product owner, reviewer và compliance team.
+User Workflow | Quy trình người dùng | Chuỗi thao tác thực tế người dùng hoàn thành công việc | Upload→review→correct→export.
+Pain Point | Điểm đau/vấn đề lớn | Khó khăn gây mất thời gian, tiền hoặc chất lượng | QA mất ba ngày viết test case.
+Value Proposition | Giá trị đề xuất | Lý do giải pháp có ích hơn cách hiện tại | Giảm thời gian và giữ output editable.
+Requirement | Yêu cầu | Điều hệ thống phải thực hiện hoặc thỏa | Output phải giữ dimension chính xác.
+Functional Requirement | Yêu cầu chức năng | Hành vi/tính năng hệ thống cần có | Export room polygons.
+Non-functional Requirement | Yêu cầu phi chức năng | Yêu cầu về latency, security, reliability, usability | p95 dưới hai giây.
+Constraint | Ràng buộc | Điều không được vi phạm | Không được tạo wall ngoài boundary.
+Assumption | Giả định | Điều coi là đúng để thiết kế, cần kiểm chứng | Input PDF có scale đáng tin.
+Trade-off | Sự đánh đổi | Cải thiện mặt này có thể làm giảm mặt khác | Tile nhỏ tăng detail nhưng giảm context.
+Scope | Phạm vi | Phần công việc được bao gồm/loại trừ | Prototype chỉ hỗ trợ một loại floor plan.
+Out of Scope | Ngoài phạm vi | Phần chủ động chưa giải quyết | Chưa tái dựng 3D.
+Acceptance Criteria | Tiêu chí chấp nhận | Điều kiện đo được để feature được coi hoàn thành | 95% room polygons hợp lệ hình học.
+Editable Output | Output chỉnh sửa được | Người dùng có thể sửa object/attribute/geometry | Quan trọng hơn ảnh render đẹp trong AEC.
+Explainability | Khả năng giải thích | Cho biết cơ sở hoặc dấu vết tạo prediction/decision | Highlight source region và violated rule.
+Audit Trail | Dấu vết kiểm toán | Lịch sử ai/model nào tạo/sửa/phê duyệt output | Cần với bản vẽ và quyết định quan trọng.
+Product-oriented Engineering | Kỹ thuật hướng sản phẩm | Tối ưu giá trị người dùng, workflow và vận hành chứ không chỉ demo model | Kế hoạch 90 ngày bắt đầu từ user workflow.
+Iteration | Lặp cải tiến | Chu trình build–measure–learn | Prototype, review expert, sửa và đánh giá lại.
+Roadmap | Lộ trình | Chuỗi ưu tiên phát triển theo thời gian và bằng chứng | PoC → internal tool → production.
+Pilot | Thử nghiệm giới hạn | Triển khai với nhóm nhỏ để lấy bằng chứng ban đầu | Pilot 28 internal users.
+Product-Market Fit (PMF) | Mức phù hợp sản phẩm–thị trường | Dấu hiệu thị trường thực sự cần và duy trì dùng sản phẩm | 28 người chỉ là early signal, chưa kết luận PMF.
+
+
+================================================================================================================
+L. NHỮNG CẶP TỪ RẤT DỄ NHẦM
+================================================================================================================
+
+Detection vs Tracking | Phát hiện vs theo dõi | Detection tìm object từng frame; tracking duy trì identity qua thời gian | YOLO detect, ByteTrack track.
+Classification vs Detection | Phân loại vs phát hiện | Classification gán nhãn toàn ảnh; detection trả nhiều bbox+class | Có helmet trong ảnh vs helmet ở đâu.
+Detection vs Segmentation | Phát hiện vs phân đoạn | Detection trả bbox; segmentation trả mask từng pixel | Symbol dùng bbox, crack dùng mask.
+Semantic vs Instance Segmentation | Ngữ nghĩa vs cá thể | Semantic gộp cùng class; instance tách từng object | Tường class chung vs từng vết lỗi riêng.
+Precision vs Recall | Ít báo nhầm vs ít bỏ sót | Precision phạt FP; recall phạt FN | Safety thường coi FN rất đắt.
+Confidence vs Accuracy | Độ tin cậy prediction vs chất lượng đo trên tập | Confidence là score từng output; accuracy/metric đo trên dataset | Score 0.9 không đảm bảo đúng 90% nếu chưa calibration.
+IoU vs Accuracy | Overlap vs tỷ lệ đúng | IoU đo giao/hợp bbox/mask; accuracy là metric khác | IoU dùng quyết định TP.
+mAP vs Accuracy | AP trung bình vs độ chính xác tổng | mAP là diện tích PR curve trung bình, không đọc như phần trăm đúng | mAP 0.84 không nghĩa 84/100 ảnh đúng.
+Validation Set vs Test Set | Tập tinh chỉnh vs tập báo cáo cuối | Validation dùng chọn model/threshold; test giữ độc lập | Không tune trên test.
+Validation vs Verification | Xác nhận đúng nhu cầu vs kiểm chứng đúng đặc tả | Verification: build đúng; validation: build đúng thứ người dùng cần | Schema đúng chưa chắc nghiệp vụ đúng.
+Syntax vs Semantics | Cú pháp vs ngữ nghĩa | Format parse được chưa chắc logic đúng | YAML hợp lệ nhưng selector sai.
+Latency vs Throughput | Độ trễ vs thông lượng | Latency là thời gian một request; throughput là số request/giây | Batch tăng throughput nhưng có thể tăng latency.
+Batch vs Real-time | Xử lý lô vs thời gian thực | Batch ưu tiên throughput; real-time ưu tiên deadline | Drawing offline vs camera live.
+Training vs Inference | Huấn luyện vs suy luận | Training cập nhật weights; inference dùng weights dự đoán | Fine-tune YOLO rồi chạy video.
+Parameter vs Hyperparameter | Tham số học vs siêu tham số đặt trước | Weight là parameter; learning rate là hyperparameter | Model học weight, engineer tune LR.
+Overfitting vs Underfitting | Quá khớp vs thiếu khớp | Overfit tốt train kém test; underfit kém cả hai | Cần xem learning curves.
+RGB vs BGR | Thứ tự màu | OpenCV dùng BGR, nhiều thư viện dùng RGB | Quên convert làm màu hiển thị sai.
+Affine vs Homography | Affine vs projective | Affine giữ song song; homography xử lý perspective giữa mặt phẳng | Floor plane cần homography.
+Intrinsic vs Extrinsic | Nội tại vs ngoại tại camera | Intrinsic mô tả lens/sensor; extrinsic mô tả pose camera | K và R,t.
+Translation vs Camera Motion | Tịnh tiến vs chuyển động camera tổng quát | Camera motion còn rotation/zoom/tilt | Repo mới xấp xỉ X/Y translation.
+Pixel Distance vs Real-world Distance | Khoảng cách pixel vs vật lý | Pixel phụ thuộc perspective; real-world cần calibration/scale | Không gọi 70 pixel là 70 cm.
+Raster vs Vector | Lưới pixel vs hình học | Raster cần CV/OCR; vector có path/text trực tiếp | Ưu tiên parse CAD/PDF vector.
+CAD vs BIM | Hình học bản vẽ vs mô hình thông tin | CAD chủ yếu drawing/entity; BIM gắn semantic và thuộc tính vòng đời | Wall BIM không chỉ là hai line.
+OCR vs Document Understanding | Đọc chữ vs hiểu tài liệu | OCR trả text; understanding còn layout, relation và semantics | Đọc D100 rồi gán đúng pipe.
+PoC vs MVP | Chứng minh kỹ thuật vs sản phẩm tối thiểu | PoC trả lời “làm được không”; MVP tạo giá trị dùng được | MVP cần workflow và feedback.
+Prototype vs Production | Nguyên mẫu vs vận hành thật | Production cần test, monitoring, security và reliability | Football project đang là prototype.
+Metric vs KPI | Chỉ số kỹ thuật vs chỉ số mục tiêu chính | Metric có thể nhiều; KPI gắn mục tiêu quan trọng | mAP là metric, edit-time có thể là KPI.
+Correlation vs Causation | Tương quan vs nhân quả | Hai biến đi cùng không chứng minh một biến gây biến kia | Pilot nhanh hơn chưa tự động chứng minh chỉ do model.
+
+
+================================================================================================================
+M. CÁC CÂU “CỨU NGUY” KHI QUÊN TỪ
+================================================================================================================
+
+1. “I may not recall the exact term, but the mechanism is…”
+   “Em có thể chưa nhớ đúng thuật ngữ, nhưng cơ chế của nó là…”
+
+2. “Let me separate the model metric from the business metric.”
+   “Cho em tách chỉ số của model và chỉ số nghiệp vụ trước.”
+
+3. “The output is syntactically valid, but semantic correctness still requires review.”
+   “Output đúng cú pháp, nhưng tính đúng nghiệp vụ vẫn cần được kiểm duyệt.”
+
+4. “That is an assumption in the current prototype, not a validated fact.”
+   “Đó là giả định của prototype hiện tại, chưa phải kết luận đã được kiểm chứng.”
+
+5. “I would establish a measurable baseline before choosing a more complex model.”
+   “Em sẽ xây baseline đo được trước khi chọn model phức tạp hơn.”
+
+6. “I would evaluate this on an unseen split grouped by project/video to avoid leakage.”
+   “Em sẽ đánh giá trên tập chưa thấy, chia theo project/video để tránh leakage.”
+
+7. “The right threshold depends on the cost of false positives and false negatives.”
+   “Threshold phù hợp phụ thuộc chi phí của báo nhầm và bỏ sót.”
+
+8. “I would first identify the representation and constraints required downstream.”
+   “Trước tiên em sẽ xác định representation và constraint mà downstream cần.”
+
+9. “I have not implemented that part yet, but I would approach it by…”
+   “Phần đó em chưa triển khai, nhưng em sẽ tiếp cận theo hướng…”
+
+10. “Could I clarify whether the input is vector PDF/CAD or a raster scan?”
+    “Em xin làm rõ input là PDF/CAD vector hay bản scan raster được không?”
+
+11. “Do we optimize for precision, recall, latency, or edit time in this workflow?”
+    “Trong workflow này mình ưu tiên precision, recall, latency hay thời gian chỉnh sửa?”
+
+12. “I would need the sample size and pass criteria before interpreting that percentage.”
+    “Em cần cỡ mẫu và tiêu chí pass trước khi diễn giải tỷ lệ đó.”
+
+
+================================================================================================================
+N. 50 TỪ CORE PHẢI ÔN NGAY TRƯỚC BUỔI PHỎNG VẤN
+================================================================================================================
+
+01. Applied AI                     — AI ứng dụng
+02. Agentic Workflow               — Quy trình tác nhân AI
+03. Orchestration                  — Điều phối
+04. Structured Output              — Đầu ra có cấu trúc
+05. Schema Validation              — Kiểm tra lược đồ
+06. Semantic Correctness           — Tính đúng ngữ nghĩa/nghiệp vụ
+07. Hallucination                  — Ảo giác mô hình
+08. Grounding                      — Neo vào nguồn dữ liệu
+09. Human-in-the-Loop              — Con người trong vòng xử lý
+10. Partial Regeneration           — Sinh lại một phần
+11. Intermediate Representation    — Biểu diễn trung gian
+12. Observability                  — Khả năng quan sát hệ thống
+13. Object Detection               — Phát hiện đối tượng
+14. Object Tracking                — Theo dõi đối tượng
+15. Bounding Box                   — Hộp bao
+16. Confidence Threshold           — Ngưỡng tin cậy
+17. Intersection over Union        — Tỷ lệ giao trên hợp
+18. Precision                      — Độ chính xác dương tính
+19. Recall                         — Độ bao phủ/độ nhạy
+20. Mean Average Precision         — AP trung bình
+21. Non-Maximum Suppression        — Khử bbox trùng
+22. YOLO                           — Detector một giai đoạn
+23. ByteTrack                      — Tracker dựa detection
+24. Data Association               — Liên kết detection với track
+25. ID Switch                      — Đổi nhầm ID
+26. Optical Flow                   — Luồng quang học
+27. Camera Motion Compensation     — Bù chuyển động camera
+28. Coordinate System              — Hệ tọa độ
+29. Perspective Transformation     — Biến đổi phối cảnh
+30. Homography                     — Ánh xạ giữa hai mặt phẳng
+31. Camera Calibration             — Hiệu chuẩn camera
+32. RANSAC                         — Fit robust trước outlier
+33. Reprojection Error             — Sai số chiếu lại
+34. Semantic Segmentation          — Phân đoạn ngữ nghĩa
+35. Instance Segmentation          — Phân đoạn cá thể
+36. OCR                            — Nhận dạng ký tự quang học
+37. Image Registration             — Căn chỉnh ảnh
+38. CAD                            — Thiết kế hỗ trợ máy tính
+39. BIM                            — Mô hình thông tin công trình
+40. AEC                            — Kiến trúc, kỹ thuật và xây dựng
+41. Tiled Inference                — Suy luận chia ô
+42. Graph Representation           — Biểu diễn đồ thị
+43. Spatial Relationship           — Quan hệ không gian
+44. Constraint Validation          — Kiểm tra ràng buộc
+45. Data Leakage                   — Rò rỉ dữ liệu
+46. Domain Shift                   — Dịch chuyển miền dữ liệu
+47. Baseline                       — Mốc cơ sở đo được
+48. Error Analysis                 — Phân tích lỗi
+49. Production-ready               — Sẵn sàng vận hành thật
+50. Product-oriented AI            — AI hướng sản phẩm/quy trình
+
+
+================================================================================================================
+O. CONFIDENCE CALIBRATION, UNCERTAINTY VÀ OOD DETECTION
+================================================================================================================
+
+[CORE] Confidence Calibration | Hiệu chỉnh độ tin cậy | Làm cho confidence của model gần với xác suất prediction thực sự đúng | Nhóm confidence 0.8 nên đúng xấp xỉ 80% nếu calibration tốt.
+Calibrated Confidence | Confidence đã hiệu chỉnh | Điểm confidence đã được kiểm tra và điều chỉnh trên calibration set | Dùng calibrated score để đặt auto-accept threshold.
+Overconfidence | Quá tự tin | Model trả confidence cao hơn tỷ lệ đúng thực tế | Prediction 0.9 nhưng chỉ đúng 65%.
+Underconfidence | Thiếu tự tin | Model trả confidence thấp hơn tỷ lệ đúng thực tế | Prediction 0.6 nhưng thực tế đúng 90%.
+Calibration Set | Tập hiệu chỉnh | Tập độc lập dùng fit hoặc kiểm tra calibration, không dùng train model chính | Chia theo project để tránh leakage.
+[CORE] Reliability Diagram | Biểu đồ độ tin cậy | So confidence trung bình với accuracy thực tế theo từng khoảng score | Điểm lệch đường chéo cho thấy miscalibration.
+[CORE] Expected Calibration Error (ECE) | Sai số hiệu chỉnh kỳ vọng | Trung bình có trọng số độ lệch giữa confidence và accuracy theo các bin | ECE càng thấp thường calibration càng tốt.
+Brier Score | Điểm Brier | Trung bình bình phương sai khác giữa xác suất dự đoán và nhãn đúng/sai | Đánh giá cả calibration và độ chính xác xác suất.
+Negative Log-Likelihood (NLL) | Âm log-likelihood | Metric phạt mạnh khi model tự tin nhưng dự đoán sai | Dùng đánh giá probability output.
+Temperature Scaling | Hiệu chỉnh bằng nhiệt độ | Học một hệ số temperature trên validation logits để calibrate confidence | Giữ thứ tự class nhưng điều chỉnh độ sắc phân phối.
+Platt Scaling | Hiệu chỉnh Platt | Fit logistic regression chuyển score thành xác suất hiệu chỉnh | Hợp một số bài toán binary classification.
+Isotonic Regression | Hồi quy đẳng điệu | Học ánh xạ đơn điệu phi tham số từ score sang xác suất | Linh hoạt nhưng cần calibration set đủ lớn.
+Probability Calibration | Hiệu chỉnh xác suất | Tên chung cho kỹ thuật làm probability score đáng tin hơn | Temperature scaling là một phương pháp.
+[CORE] Uncertainty Estimation | Ước lượng độ không chắc chắn | Đo mức model hoặc dữ liệu khiến prediction không chắc | Route case không chắc sang human review.
+Aleatoric Uncertainty | Bất định do dữ liệu | Uncertainty từ noise hoặc ambiguity vốn có của input | Bản scan mờ khiến ký hiệu không thể đọc rõ.
+Epistemic Uncertainty | Bất định do kiến thức model | Uncertainty do model chưa thấy đủ dạng dữ liệu | Drawing standard mới ngoài dữ liệu train.
+Model Disagreement | Bất đồng giữa mô hình | Nhiều model/checkpoint đưa prediction khác nhau | Bất đồng cao là tín hiệu cần review.
+Deep Ensemble | Tổ hợp mô hình sâu | Chạy nhiều model độc lập để lấy mean và disagreement | Chính xác hơn nhưng tăng compute.
+Monte Carlo Dropout | Dropout Monte Carlo | Bật dropout nhiều lần lúc inference để xấp xỉ uncertainty | Variance prediction cao cho thấy không chắc.
+[CORE] Out-of-Distribution (OOD) | Ngoài phân phối | Input khác đáng kể dữ liệu model từng học/đánh giá | Bản vẽ MEP khác floor plan kiến trúc train set.
+[CORE] OOD Detection | Phát hiện dữ liệu ngoài phân phối | Xác định input không giống distribution quen thuộc để từ chối hoặc review | Kết hợp embedding distance và validation failures.
+In-Distribution (ID) | Trong phân phối | Input tương tự dữ liệu train/calibration mục tiêu | Cùng drawing family và standard đã học.
+OOD Score | Điểm ngoài phân phối | Điểm biểu diễn mức input khác dữ liệu tham chiếu | Score cao thì manual fallback.
+Novelty Detection | Phát hiện mẫu mới lạ | Phát hiện sample chưa giống dữ liệu bình thường đã biết | Tìm symbol family mới.
+Anomaly Detection | Phát hiện bất thường | Tìm sample hoặc hành vi lệch khỏi pattern bình thường | Số lượng door prediction bất thường.
+Embedding Distance | Khoảng cách embedding | Độ xa giữa vector input mới và dữ liệu tham chiếu | Drawing embedding xa train clusters.
+k-Nearest Neighbours (k-NN) | K láng giềng gần nhất | So sample với K vector gần nhất để phân loại hoặc đo độ lạ | Distance tới K train drawings làm OOD signal.
+Mahalanobis Distance | Khoảng cách Mahalanobis | Khoảng cách có xét covariance của phân phối feature | Phát hiện feature xa class distribution.
+Density Estimation | Ước lượng mật độ | Ước lượng vùng feature nào có nhiều dữ liệu quen thuộc | Mật độ thấp có thể là OOD.
+[CORE] Selective Prediction | Dự đoán có chọn lọc | Model được phép từ chối những case không đủ tin cậy | Chỉ auto-accept case an toàn.
+Abstention | Từ chối dự đoán | Hệ thống chủ động không đưa kết luận khi uncertainty cao | Trả “needs review” thay vì đoán room type.
+Reject Option | Tùy chọn từ chối | Cơ chế classifier chuyển case không chắc sang nhánh khác | Reject OOD drawing.
+Coverage–Risk Trade-off | Đánh đổi độ phủ–rủi ro | Auto xử lý nhiều case hơn thường làm tăng error risk | Tăng threshold giảm coverage nhưng tăng độ an toàn.
+Auto-accept Threshold | Ngưỡng tự động chấp nhận | Threshold đủ cao để output đi tiếp không cần review theo policy | Door cần calibrated precision 98%.
+Human Escalation | Chuyển cho con người | Route case không chắc hoặc rủi ro cao tới chuyên gia | Kiến trúc sư review geometry conflict.
+Manual Fallback | Phương án thủ công dự phòng | Quay về quy trình người làm khi automation không đáng tin | Drawing OOD dùng workflow cũ.
+False Accept | Chấp nhận nhầm | Hệ thống auto-accept output sai | Rủi ro cao hơn chỉ gửi thừa case đi review.
+False Reject | Từ chối nhầm | Hệ thống chuyển review một output thực ra đúng | Tăng chi phí người dùng nhưng thường ít nguy hiểm hơn false accept.
+Receiver Operating Characteristic (ROC) | Đường cong ROC | Quan hệ true-positive rate và false-positive rate theo threshold | Dùng đánh giá OOD detector nhị phân.
+Area Under ROC Curve (AUROC) | Diện tích dưới ROC | Khả năng xếp OOD score của positive cao hơn negative | Không tự quyết operating threshold.
+Operating Point | Điểm vận hành | Threshold thực tế được chọn theo cost và constraint | Chọn false-accept rate dưới 1%.
+Confidence Policy | Chính sách confidence | Rule kết hợp calibrated score, OOD và validation để route output | Accept, review hoặc reject.
+
+
+================================================================================================================
+P. DEPENDENCY, VERSIONING VÀ WORKFLOW PHỤC HỒI
+================================================================================================================
+
+[CORE] Artifact ID | Mã artifact | Định danh ổn định cho một output được lưu của pipeline | flow_123 hoặc scenario_456.
+Artifact Version | Phiên bản artifact | Số/version phân biệt các lần thay đổi của cùng artifact logic | requirement R1 v2 thay R1 v1.
+Stable Identifier | Định danh ổn định | ID không đổi theo nội dung hiển thị hoặc thứ tự | Scenario ID giữ được trace qua version.
+[CORE] Parent–Child Dependency | Phụ thuộc cha–con | Quan hệ output downstream được sinh từ artifact upstream cụ thể | YAML là child của scenario.
+Dependency Graph | Đồ thị phụ thuộc | Graph mô tả artifact nào phụ thuộc artifact nào | Flow → scenarios → YAML files.
+Dependency Edge | Cạnh phụ thuộc | Link chứa source artifact ID/version và target artifact | scenario_version dựa vào flow_version.
+Traceability Link | Liên kết truy vết | Quan hệ cho biết output bắt nguồn từ requirement/source nào | Test case tham chiếu requirement ID.
+Descendant | Hậu duệ/phần tử phía dưới | Mọi node downstream đi tới được từ một artifact | Sửa flow làm ảnh hưởng descendants.
+Ancestor | Tổ tiên/phần tử phía trên | Mọi node upstream mà artifact phụ thuộc | YAML ancestors gồm scenario và flow.
+[CORE] Dirty Status | Trạng thái đã thay đổi | Đánh dấu dữ liệu có thay đổi chưa được xử lý xuống downstream | Requirement edited → dirty.
+[CORE] Stale Status | Trạng thái lỗi thời | Artifact vẫn tồn tại nhưng không còn hợp lệ với upstream version hiện tại | YAML sinh từ scenario v1 sau khi có v2.
+[CORE] Invalidation | Làm mất hiệu lực | Đánh dấu artifact không còn dùng được do dependency thay đổi | Sửa flow invalidates child scenarios.
+Invalidation Scope | Phạm vi làm mất hiệu lực | Tập descendant cụ thể cần stale/regenerate | Chỉ nhánh Flow A, không ảnh hưởng Flow B.
+Fine-grained Dependency | Phụ thuộc mức chi tiết | Quan hệ ở level requirement/entity cụ thể giúp rerun hẹp | Requirement ID → đúng scenarios sử dụng nó.
+Coarse-grained Dependency | Phụ thuộc mức thô | Quan hệ ở level lớn khiến nhiều artifact phải rerun | Flow changed → toàn bộ scenarios của flow stale.
+[CORE] Targeted Rerun | Chạy lại có mục tiêu | Rerun đúng stage và subset artifact bị ảnh hưởng | Chỉ sinh YAML cho scenario S2 v3.
+Rerun Scope | Phạm vi chạy lại | Danh sách stage/entity được phép regenerate | selected_flow_names hoặc scenario IDs.
+Change Set | Tập thay đổi | Danh sách entity/field/version đã đổi | Dùng xác định invalidation.
+Content Diff | So sánh nội dung | So version cũ và mới để biết field nào thay đổi | Chỉ room label đổi, geometry không đổi.
+[CORE] Atomic Update | Cập nhật nguyên tử | Một nhóm thay đổi hoặc hoàn thành toàn bộ, hoặc không áp dụng gì | Không để active pipeline nửa cũ nửa mới.
+Database Transaction | Giao dịch CSDL | Nhóm thao tác database commit/rollback cùng nhau | Chuyển active version trong một transaction.
+Commit | Chốt thay đổi | Áp dụng transaction/version mới thành công | Active pointer chuyển sang run mới.
+Rollback | Hoàn tác | Quay về trạng thái trước khi transaction/version lỗi | Giữ artifact cũ nếu rerun thất bại.
+Staging Area | Vùng tạm | Nơi lưu output mới chưa active để validate | Run mới ghi draft artifacts.
+Active Pointer | Con trỏ phiên bản đang dùng | Reference tới version được người dùng/hệ thống coi là hiện hành | Chỉ đổi pointer sau validation pass.
+Snapshot | Ảnh chụp trạng thái | Tập version nhất quán của pipeline tại một thời điểm | Snapshot gồm Flow v2, Scenario v3, YAML v3.
+[CORE] Idempotency Key | Khóa chống lặp | Key nhận biết cùng một request để retry không tạo tác dụng phụ trùng | Hash project+parent version+scope.
+Exactly-once Effect | Hiệu ứng đúng một lần | Dù request giao nhiều lần, business change chỉ áp dụng một lần | Không sinh duplicate artifacts.
+At-least-once Delivery | Giao ít nhất một lần | Message có thể giao lặp nhưng không bị mất, cần idempotency | Queue retry job.
+Run ID | Mã lần chạy | ID liên kết mọi output/log của một pipeline execution | run_2026_08_06_001.
+Task State | Trạng thái tác vụ | pending/running/completed/failed mô tả vòng đời job | Resume từ stage completed.
+Checkpoint | Điểm lưu trung gian | Trạng thái/artifact đã hoàn thành để tiếp tục sau lỗi | Agent 2 hoàn tất trước Agent 3 timeout.
+Resume | Tiếp tục | Chạy tiếp từ checkpoint thay vì bắt đầu lại | Resume failed pipeline at script generation.
+[CORE] Audit History | Lịch sử kiểm toán | Log bất biến về ai, khi nào, model nào tạo/sửa/duyệt output | Truy vết YAML về requirement version.
+Audit Trail | Dấu vết kiểm toán | Chuỗi event và version giải thích lịch sử artifact | Hỗ trợ compare và rollback.
+Lineage | Dòng dõi dữ liệu | Nguồn gốc và các bước biến đổi tạo ra dataset/artifact | Data lineage từ scan đến Rhino script.
+Provenance | Xuất xứ dữ liệu | Metadata chứng minh nguồn và quá trình tạo dữ liệu | Source file, model version và prompt hash.
+Immutable History | Lịch sử bất biến | Version/event cũ không bị ghi đè hoặc sửa âm thầm | Tạo version mới thay vì update v1.
+Optimistic Concurrency Control | Kiểm soát đồng thời lạc quan | Chỉ update nếu version chưa đổi từ lúc đọc | Ngăn hai reviewer ghi đè nhau.
+Version Conflict | Xung đột phiên bản | Hai thay đổi dựa trên cùng version cũ không thể merge tự động | Yêu cầu reviewer resolve.
+Atomic Artifact Promotion | Kích hoạt artifact nguyên tử | Chuyển toàn bộ output staging thành active cùng lúc | Tránh trộn Flow v2 với YAML v1.
+
+
+================================================================================================================
+Q. CHI PHÍ, ĐỘ ỔN ĐỊNH VÀ MODEL ROUTING
+================================================================================================================
+
+[CORE] Model Cascade | Chuỗi model theo tầng | Dùng model/rule rẻ trước, chỉ chuyển case khó sang model mạnh | OCR nhỏ → multimodal model khi không chắc.
+[CORE] Model Routing | Định tuyến mô hình | Chọn model dựa trên loại input, độ khó, chi phí hoặc uncertainty | OOD case route tới strong model.
+Small Model | Mô hình nhỏ | Model rẻ/nhanh nhưng thường ít năng lực hơn | Xử lý case phổ biến.
+Strong Model | Mô hình mạnh | Model chất lượng cao hơn nhưng tốn chi phí/latency | Chỉ xử lý ambiguous regions.
+Escalation Policy | Chính sách nâng cấp xử lý | Rule quyết định khi nào chuyển sang model mạnh hoặc human | Low confidence + critical entity.
+Cost per Successful Artifact | Chi phí trên artifact thành công | Tổng chi phí chia output đạt chất lượng/chấp nhận | Tốt hơn chỉ nhìn giá từng API call.
+Token Usage | Lượng token sử dụng | Số token input/output của model call | Theo dõi theo từng agent stage.
+Context Reduction | Giảm context | Loại/chọn dữ liệu cần thiết để giảm token và noise | Gửi đúng PRD section liên quan.
+Region of Interest Routing | Định tuyến theo vùng quan tâm | Chỉ gửi crop/vùng mơ hồ sang model đắt | Không gửi toàn sheet 20k pixel.
+Content-addressed Cache | Cache theo nội dung | Cache key dựa hash input+model+config | Cùng input có cùng kết quả cache.
+Cache Hit | Trúng cache | Tìm được kết quả cache nên không tính lại | Giảm latency và cost.
+Cache-hit Rate | Tỷ lệ trúng cache | Số request dùng cache chia tổng request có thể cache | Metric tối ưu pipeline.
+[CORE] Asynchronous Job | Tác vụ bất đồng bộ | Request tạo job và nhận kết quả sau thay vì giữ kết nối dài | Pipeline bản vẽ chạy qua queue.
+Job Queue | Hàng đợi tác vụ | Buffer lưu job chờ worker xử lý | Redis/RabbitMQ/SQS queue.
+Dead-letter Queue (DLQ) | Hàng đợi lỗi | Nơi giữ job thất bại nhiều lần để điều tra | Không retry vô hạn một drawing corrupt.
+Poison Message | Message gây lỗi lặp | Job/input luôn khiến worker thất bại | File PDF hỏng vào DLQ.
+Exponential Backoff | Lùi thời gian theo cấp số nhân | Khoảng chờ retry tăng dần để giảm tải | 1s, 2s, 4s, 8s.
+Retry Budget | Ngân sách retry | Số lần/thời gian retry tối đa | Chỉ retry timeout ba lần.
+[CORE] Circuit Breaker | Bộ ngắt mạch | Tạm ngừng gọi dependency lỗi nhiều để tránh lỗi lan và chờ phục hồi | Model provider down thì mở circuit.
+Circuit Open | Mạch mở | Dependency bị chặn call tạm thời | Route sang fallback.
+Circuit Half-open | Mạch bán mở | Thử một ít request để kiểm tra dependency đã hồi phục | Thành công thì đóng circuit.
+Bulkhead Pattern | Mẫu vách ngăn | Cô lập tài nguyên giữa workload để một lỗi không kéo sập tất cả | Queue riêng model lớn và OCR.
+Concurrency Limit | Giới hạn đồng thời | Số job/request tối đa chạy cùng lúc | Tránh hết GPU VRAM.
+Rate Limit | Giới hạn tốc độ | Số request cho phép trong thời gian | Bảo vệ API/model quota.
+Graceful Fallback | Dự phòng có kiểm soát | Trả phương án yếu hơn hoặc review thay vì fail toàn bộ | Giữ IR và chờ human nếu generator lỗi.
+Stage-level Persistence | Lưu bền theo giai đoạn | Lưu output sau từng stage để phục hồi | Không mất perception output khi Rhino generation fail.
+Stage-level Retry | Retry theo giai đoạn | Chỉ thử lại stage lỗi | Không OCR lại khi script generator timeout.
+Failure Boundary | Ranh giới lỗi | Biên kiến trúc ngăn lỗi một phần lan sang phần khác | Validator chặn geometry sai xuống generator.
+Quality Gate | Cổng chất lượng | Điều kiện metric/validation phải pass trước bước tiếp | Geometry valid trước script generation.
+Service-Level Objective (SLO) | Mục tiêu mức dịch vụ | Mục tiêu đo cho availability/latency/quality | 95% job hoàn tất dưới 2 phút.
+Service-Level Indicator (SLI) | Chỉ báo mức dịch vụ | Metric thực tế dùng đo SLO | p95 job latency.
+Error Budget | Ngân sách lỗi | Mức lỗi cho phép trong kỳ dựa trên SLO | Dùng cân bằng reliability và tốc độ release.
+Tail Latency | Độ trễ phần đuôi | Latency cao của số ít request chậm | Theo dõi p95/p99 thay vì trung bình.
+Cost–Quality Trade-off | Đánh đổi chi phí–chất lượng | Giảm cost có thể làm quality giảm và ngược lại | Quantization phải qua regression set.
+Deterministic Component | Thành phần xác định | Cùng input tạo cùng output bằng code/rule | JSON-to-Rhino script generator.
+Stochastic Component | Thành phần ngẫu nhiên | Output có thể thay đổi giữa các lần chạy | LLM generation.
+
+
+================================================================================================================
+R. PSEUDO-LABELING VÀ CHIẾN LƯỢC DỮ LIỆU BAN ĐẦU
+================================================================================================================
+
+[CORE] Pseudo-label | Nhãn giả | Label do model/rule tạo ra trên dữ liệu chưa gán nhãn | Detector pretrained đề xuất bbox cửa.
+[CORE] Pseudo-labeling | Gán nhãn giả | Dùng model hiện có tạo label rồi lọc/review để mở rộng data | Pre-label 50 sheets trước human correction.
+Model-assisted Labeling | Gán nhãn có model hỗ trợ | Model tạo annotation ban đầu, con người sửa thay vì làm từ đầu | CVAT import predicted boxes.
+Pre-labeling | Gán nhãn sơ bộ | Tạo nhãn đề xuất trước vòng human annotation | OCR đề xuất room labels.
+Auto-labeling | Gán nhãn tự động | Tool/model tự tạo label; vẫn cần quality control | Foundation model tạo masks ban đầu.
+Weak Supervision | Giám sát yếu | Tạo noisy label từ rule, heuristic hoặc nhiều nguồn | Hough/morphology tạo wall masks.
+Silver Label | Nhãn bạc | Label tự động hoặc ít kiểm duyệt, chất lượng thấp hơn gold | Dùng pretraining/triage.
+Gold Label | Nhãn vàng | Label được chuyên gia kiểm tra kỹ, dùng evaluation đáng tin | Holdout geometry do kiến trúc sư duyệt.
+Label Noise | Nhiễu nhãn | Label sai/không nhất quán trong dataset | Door bbox thiếu hoặc class nhầm.
+Quality Control (QC) | Kiểm soát chất lượng | Quy trình kiểm tra label/output theo guideline | Review 100% class critical.
+Double Annotation | Gán nhãn kép | Hai annotator độc lập label cùng sample để đo agreement | Áp dụng trên subset khó.
+Active Sampling | Chọn mẫu chủ động | Chọn sample theo uncertainty/diversity/error thay vì random | Ưu tiên OOD và false negatives.
+Uncertainty Sampling | Chọn mẫu theo bất định | Label những sample model confidence thấp | Tiết kiệm ngân sách annotation.
+Diversity Sampling | Chọn mẫu đa dạng | Chọn sample phủ nhiều cluster/domain | Không label 100 frame gần giống.
+Representative Sample | Mẫu đại diện | Sample phản ánh phân phối triển khai mục tiêu | Nhiều project, scan quality và drawing family.
+Holdout Set | Tập giữ lại | Tập không dùng phát triển/tune, chỉ evaluation cuối | Demo trên sheets chưa thấy.
+Data Curation | Tuyển chọn dữ liệu | Chọn, làm sạch, cân bằng và version dữ liệu | Lo duplicate và kiểm tra license.
+Annotation Tool | Công cụ gán nhãn | Phần mềm tạo bbox, mask, polygon hoặc text label | CVAT, Label Studio, Roboflow.
+Annotation Cost | Chi phí gán nhãn | Thời gian/tiền cho tạo và review label | Model-assisted labeling giảm edit time.
+Learning Velocity | Tốc độ học của dự án | Tốc độ thu bằng chứng và cải thiện qua vòng lặp | Hai tuần ưu tiên biết bottleneck, không train model lớn.
+
+
+================================================================================================================
+S. COMPUTATIONAL DESIGN, RHINO, GRASSHOPPER VÀ GRAPH2PLAN
+================================================================================================================
+
+[CORE] Computational Design | Thiết kế tính toán | Dùng thuật toán, tham số và rule để tạo/phân tích thiết kế | Script sinh geometry từ room graph.
+Parametric Design | Thiết kế tham số | Geometry phụ thuộc parameter và relationship có thể thay đổi | Đổi room width cập nhật layout.
+Procedural Generation | Sinh theo thủ tục | Tạo nội dung bằng chuỗi rule/algorithm | Generator dựng wall từ centerline.
+[CORE] Rhino 3D | Phần mềm Rhino 3D | Công cụ CAD/NURBS phổ biến cho thiết kế hình học và computational design | Chạy Rhino Python script.
+[CORE] Grasshopper | Grasshopper | Môi trường lập trình trực quan dạng node trong Rhino | Component graph tạo parametric geometry.
+Grasshopper Definition | Định nghĩa Grasshopper | File/graph node và connection mô tả workflow tham số | Input slider điều khiển room dimensions.
+Visual Programming | Lập trình trực quan | Lập trình bằng node và dây nối thay vì chỉ code text | Grasshopper là visual programming.
+Rhino Python | Python trong Rhino | Script Python điều khiển document và geometry của Rhino | Tạo closed curves từ room polygons.
+RhinoCommon | API RhinoCommon | .NET SDK chính thao tác geometry, document và UI Rhino | Python/C# gọi Rhino.Geometry.
+RhinoScriptSyntax | RhinoScriptSyntax | Wrapper Python đơn giản hơn quanh chức năng Rhino | rs.AddPolyline(points).
+CAD Script | Script CAD | Code/command tự động tạo hoặc chỉnh entity trong CAD | JSON IR → Rhino Python.
+Geometry Kernel | Lõi hình học | Thư viện thực hiện operation hình học chính xác | Intersection, offset, boolean.
+NURBS | Đường/mặt NURBS | Biểu diễn toán học linh hoạt cho curve và surface | Rhino mạnh về NURBS modeling.
+B-Rep (Boundary Representation) | Biểu diễn biên | Mô hình solid/surface qua face, edge và vertex | Rhino Brep cho hình học 3D.
+Curve | Đường cong | Entity hình học một chiều | Room boundary là closed planar curve.
+Closed Curve | Đường cong kín | Curve có điểm đầu trùng điểm cuối | Cần để tạo planar surface.
+Planar Curve | Đường cong đồng phẳng | Mọi điểm curve nằm trên một plane | Floor-plan polygons nằm trên XY plane.
+Offset | Dịch song song đường | Tạo curve cách curve gốc một khoảng | Wall centerline offset theo thickness.
+Boolean Operation | Phép toán Boolean | Union, difference, intersection giữa geometry | Trừ door opening khỏi wall solid.
+Snapping | Bắt dính | Căn điểm/edge về vị trí gần hợp lệ | Snap door endpoint lên wall.
+Tolerance | Dung sai | Ngưỡng sai số số học/hình học được coi là bằng hoặc giao | Dùng đúng document tolerance.
+Topology Validation | Kiểm tra tô-pô | Kiểm tra connectivity, adjacency, containment và cấu trúc | Room phải có access qua opening.
+Geometry Validation | Kiểm tra hình học | Kiểm tra shape đóng, không tự giao, đúng unit/boundary | Chặn invalid polygon.
+Self-intersection | Tự giao | Shape/curve cắt chính nó không hợp lệ cho nhiều operation | Bow-tie polygon không tạo room surface đúng.
+Spatial Constraint | Ràng buộc không gian | Rule về vị trí, kích thước hoặc quan hệ object | Door phải nằm trên wall.
+[CORE] Graph Neural Network (GNN) | Mạng neural đồ thị | Neural network truyền/tổng hợp thông tin giữa node và edge | Encode room adjacency graph.
+Message Passing | Truyền thông điệp trên graph | Node cập nhật representation từ láng giềng qua edge | Room học context từ adjacent rooms.
+Node Feature | Đặc trưng nút | Thuộc tính vector của node trong graph | Room type, area và approximate position.
+Edge Feature | Đặc trưng cạnh | Thuộc tính quan hệ giữa hai node | adjacent, connected hoặc relative direction.
+[CORE] Layout Graph | Đồ thị bố trí | Graph có node là phòng/object và edge là quan hệ không gian | Input của Graph2Plan.
+[CORE] Graph2Plan | Graph2Plan | Mô hình sinh floor plan từ layout graph và building boundary | GNN encode topology, CNN xử lý boundary.
+Building Boundary | Đường biên công trình | Polygon ngoài giới hạn floor plan | Input constraint cho Graph2Plan.
+Room Box | Hộp phòng | Rectangle/xấp xỉ geometry cho một phòng | Graph2Plan refine raster thành room boxes.
+Raster Floorplan | Mặt bằng raster | Floor plan biểu diễn bằng pixel/class map | Output trung gian của Graph2Plan.
+Layout Generation | Sinh bố trí | Tạo vị trí/kích thước các không gian theo constraint | Boundary + room graph → candidate plan.
+Graph-constrained Generation | Sinh có ràng buộc graph | Model tạo layout phải tôn trọng node/edge input | Bedroom adjacent bathroom.
+Generative Model | Mô hình sinh | Model học phân phối để tạo sample mới | Graph2Plan sinh candidate layouts.
+User-in-the-Loop Design | Người dùng trong vòng thiết kế | Người dùng cung cấp constraint và chọn/sửa phương án sinh | Kiến trúc sư chỉnh adjacency.
+Candidate Design | Phương án thiết kế ứng viên | Một output đề xuất chưa phải bản cuối/thi công | Rank nhiều layouts trước review.
+Design Space | Không gian phương án | Tập các thiết kế có thể tạo dưới constraint | Generator khám phá nhiều layouts.
+Constraint Satisfaction | Thỏa mãn ràng buộc | Output đáp ứng tất cả hoặc tối đa rule bắt buộc | Không overlap, đúng adjacency và area.
+Room Graph | Đồ thị phòng | Graph mô tả room nodes và connectivity/adjacency | Intermediate representation AEC.
+Image-to-Script Pipeline | Chuỗi ảnh tới script | Perception → IR → validation → deterministic code generation | Không sinh CAD code trực tiếp từ pixel.
+Direct Image-to-Script Generation | Sinh script trực tiếp từ ảnh | Model bỏ qua IR và tạo code thẳng từ visual input | Khó trace, validate và partial regenerate.
+Source Region | Vùng nguồn | Bbox/polygon trên input liên kết với entity IR | Click wall để quay lại pixel evidence.
+Computational Artifact | Sản phẩm tính toán | Script, graph hoặc geometry có thể chạy/chỉnh sửa | Rhino script là artifact, không chỉ screenshot.
+
+
+================================================================================================================
+T. DOMAIN FEEDBACK, USER VALUE VÀ PHÂN LOẠI LỖI
+================================================================================================================
+
+[CORE] Contextual Interview | Phỏng vấn theo ngữ cảnh | Hỏi người dùng ngay trong môi trường và task thật | Quan sát kiến trúc sư sửa output.
+Contextual Inquiry | Nghiên cứu tại ngữ cảnh làm việc | Kết hợp quan sát và hỏi lý do thao tác | Biết layer naming quan trọng hơn IoU thêm 1%.
+Task-based Evaluation | Đánh giá theo tác vụ | Đo người dùng hoàn thành một công việc cụ thể với sản phẩm | Từ scan tới Rhino geometry được chấp nhận.
+Think-aloud Protocol | Giao thức nói thành lời | Người dùng nói suy nghĩ khi thao tác để lộ khó khăn | “Tôi không biết door này gắn wall nào.”
+Correction Data | Dữ liệu chỉnh sửa | Log khác biệt giữa AI output và phiên bản chuyên gia sửa | Dùng error analysis và active learning.
+[CORE] Error Taxonomy | Phân loại lỗi | Hệ thống nhóm lỗi theo nguồn và tác động | Perception, representation, validation, workflow.
+Perception Error | Lỗi nhận biết | Model đọc sai/bỏ sót object hoặc text từ input | Thiếu wall segment.
+Representation Error | Lỗi biểu diễn | IR không đủ field/quan hệ để mô tả domain đúng | Không biểu diễn wall cong hoặc multiple scale.
+Validation Error | Lỗi kiểm tra | Validator bỏ lọt output sai hoặc chặn nhầm output đúng | Không phát hiện self-intersection.
+Generation Error | Lỗi sinh output | IR đúng nhưng script/geometry tạo sai | Sai unit khi offset wall.
+Workflow Error | Lỗi quy trình sử dụng | Output có thể đúng nhưng khó review, sửa hoặc tích hợp | Mất layer và naming convention.
+Integration Error | Lỗi tích hợp | Thành phần đúng riêng nhưng contract/tool kết nối sai | Rhino version/API mismatch.
+Critical Error | Lỗi nghiêm trọng | Lỗi có hậu quả không thể chấp nhận theo nghiệp vụ | Thiếu wall chịu lực.
+Severity | Mức độ nghiêm trọng | Tác động của lỗi nếu xảy ra | Critical, high, medium, low.
+Frequency | Tần suất | Mức lỗi xuất hiện bao nhiêu lần | 20% sheets bị OCR sai.
+Edit Time | Thời gian chỉnh sửa | Thời gian chuyên gia sửa output về trạng thái dùng được | Product metric quan trọng.
+Task Completion Time | Thời gian hoàn thành tác vụ | Tổng thời gian từ input đến kết quả được chấp nhận | So AI-assisted với manual baseline.
+Acceptance Rate | Tỷ lệ chấp nhận | Tỷ lệ artifact được domain expert duyệt theo tiêu chí | Đo usefulness tốt hơn chỉ IoU.
+Correction Rate | Tỷ lệ cần chỉnh sửa | Tỷ lệ entity/artifact phải sửa trước dùng | Theo dõi theo error category.
+Time-to-Value | Thời gian tạo giá trị | Thời gian từ bắt đầu đến khi người dùng nhận lợi ích thực | MVP hai tuần chứng minh một workflow nhỏ.
+User Outcome | Kết quả người dùng | Trạng thái cuối người dùng cần đạt, không chỉ model output | Có geometry editable đúng workflow.
+Technical Proxy Metric | Metric kỹ thuật thay thế | Metric gián tiếp đại diện chưa đầy đủ cho giá trị người dùng | IoU cao không bảo đảm kiến trúc sư thấy hữu ích.
+Prioritization Score | Điểm ưu tiên | Công thức xếp hạng vấn đề theo frequency, edit time và severity | Sửa lỗi tác động lớn trước tăng metric nhỏ.
+Selective Automation | Tự động hóa có chọn lọc | Chỉ auto các case đủ an toàn; case khác review/fallback | Lộ trình trước full automation.
+Assistive Workflow | Quy trình hỗ trợ | AI đề xuất để con người hoàn thiện thay vì tự quyết | Từ vẽ lại sang review-and-correct.
+Full Automation | Tự động hóa hoàn toàn | Hệ thống xử lý không cần human checkpoint | Chỉ phù hợp khi evidence và risk cho phép.
+Risk-based Automation | Tự động hóa theo rủi ro | Mức automation phụ thuộc severity và confidence | Critical geometry luôn cần validation/review.
+
+
+================================================================================================================
+U. BỔ SUNG 40 TỪ CORE SAU CHUỖI CÂU HỎI PHỎNG VẤN
+================================================================================================================
+
+01. Confidence Calibration          — Hiệu chỉnh độ tin cậy
+02. Reliability Diagram             — Biểu đồ độ tin cậy
+03. Expected Calibration Error      — Sai số hiệu chỉnh kỳ vọng
+04. Out-of-Distribution             — Dữ liệu ngoài phân phối
+05. OOD Detection                   — Phát hiện dữ liệu ngoài phân phối
+06. Selective Prediction            — Dự đoán có chọn lọc
+07. Abstention                      — Chủ động từ chối dự đoán
+08. False Accept                    — Chấp nhận nhầm output sai
+09. Model Cascade                   — Chuỗi model theo tầng
+10. Model Routing                   — Định tuyến model
+11. Artifact ID                     — Định danh artifact
+12. Artifact Version                — Phiên bản artifact
+13. Parent–Child Dependency         — Phụ thuộc cha–con
+14. Dependency Graph               — Đồ thị phụ thuộc
+15. Dirty/Stale Status              — Trạng thái thay đổi/lỗi thời
+16. Invalidation Scope              — Phạm vi mất hiệu lực
+17. Targeted Rerun                 — Chạy lại có mục tiêu
+18. Atomic Update                  — Cập nhật nguyên tử
+19. Idempotency Key                — Khóa chống lặp request
+20. Audit History                  — Lịch sử kiểm toán
+21. Data Lineage                   — Dòng dõi dữ liệu
+22. Asynchronous Job               — Tác vụ bất đồng bộ
+23. Dead-letter Queue              — Hàng đợi job lỗi
+24. Circuit Breaker                — Bộ ngắt mạch
+25. Failure Boundary               — Ranh giới cô lập lỗi
+26. Quality Gate                   — Cổng kiểm soát chất lượng
+27. Pseudo-labeling                — Gán nhãn giả
+28. Model-assisted Labeling        — Gán nhãn có model hỗ trợ
+29. Computational Design           — Thiết kế tính toán
+30. Parametric Design              — Thiết kế tham số
+31. RhinoCommon                    — API hình học chính của Rhino
+32. Grasshopper Definition         — Graph lập trình trực quan Grasshopper
+33. Graph Neural Network           — Mạng neural đồ thị
+34. Layout Graph                   — Đồ thị bố trí
+35. Graph2Plan                     — Sinh floor plan từ graph và boundary
+36. Geometry Validation            — Kiểm tra hình học
+37. Topology Validation            — Kiểm tra liên kết/tô-pô
+38. Error Taxonomy                 — Phân loại lỗi
+39. Task-based Evaluation          — Đánh giá theo tác vụ thực
+40. Selective Automation           — Tự động hóa có chọn lọc
+
+
+================================================================================================================
+HẾT TÀI LIỆU
+================================================================================================================

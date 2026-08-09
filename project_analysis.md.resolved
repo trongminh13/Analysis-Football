@@ -1,0 +1,422 @@
+# Phân tích dự án: Analysis-Football
+
+## Tổng quan kiến trúc
+
+Dự án xử lý video bóng đá theo **pipeline một chiều**: mỗi module nhận output của module trước, thêm thông tin mới vào dict `tracks`, rồi truyền tiếp.
+
+```
+Video → Tracker → CameraEstimator → ViewTransformer → SpeedEstimator
+                                                              ↓
+                              TeamAssigner ← PlayerBallAssigner
+                                                              ↓
+                                                       draw & save
+```
+
+---
+
+## Cấu trúc thư mục
+
+```
+Analysis-Football/
+├── main.py                          ← Điều phối toàn bộ pipeline
+├── yolo_inference.py                ← Script test YOLO độc lập
+├── utils/
+│   ├── bbox_utils.py                ← Hàm tính hình học
+│   └── video_utils.py               ← Đọc/ghi video
+├── trackers/
+│   └── tracker.py                   ← YOLO detect + ByteTrack
+├── team_assigner/
+│   └── team_assigner.py             ← Phân đội bằng K-Means màu áo
+├── player_ball_assigner/
+│   └── player_ball_assigner.py      ← Xác định ai giữ bóng
+├── camera_movement_estimator/
+│   └── camera_movement_estimator.py ← Ước tính chuyển động camera
+├── view_transformer/
+│   └── view_transformer.py          ← Chuyển pixel → mét thực
+└── speed_and_distance_estimator/
+    └── speed_and_distance_estimator.py ← Tính tốc độ & quãng đường
+```
+
+---
+
+## 1. `main.py` — Bộ điều phối pipeline
+
+**Vai trò:** Gọi từng module theo đúng thứ tự, không chứa logic nghiệp vụ.
+
+### Luồng thực thi của `main()`
+
+| Bước | Gọi hàm | Kết quả thêm vào `tracks` |
+|------|---------|--------------------------|
+| 1 | `read_video()` | `video_frames` (list frame) |
+| 2 | `tracker.get_object_tracks()` | `tracks = {players, referees, ball}` |
+| 3 | `tracker.add_position_to_tracks()` | + `position` |
+| 4 | `camera_movement_estimator.get_camera_movement()` | `camera_movement_per_frame` |
+| 5 | `camera_movement_estimator.add_adjust_positions_to_tracks()` | + `position_adjusted` |
+| 6 | `view_transformer.add_transformed_position_to_tracks()` | + `position_transformed` |
+| 7 | `tracker.interpolate_ball_positions()` | fill gap bóng thiếu |
+| 8 | `speed_and_distance_estimator.add_speed_and_distance_to_tracks()` | + `speed`, `distance` |
+| 9 | `team_assigner.assign_team_color()` | học màu 2 đội |
+| 10 | `team_assigner.get_player_team()` | + `team`, `team_color` |
+| 11 | `player_assigner.assign_ball_to_player()` | + `has_ball` |
+| 12 | `tracker.draw_annotations()` | vẽ lên frame |
+| 13 | `camera_movement_estimator.draw_camera_movement()` | vẽ HUD camera |
+| 14 | `speed_and_distance_estimator.draw_speed_and_distance()` | vẽ tốc độ |
+| 15 | `save_video()` | lưu file `.avi` |
+
+> **Tại sao thứ tự quan trọng?** Mỗi bước phụ thuộc key được thêm bởi bước trước.
+> `position` → `position_adjusted` → `position_transformed` → `speed/distance`
+
+---
+
+## 2. `utils/bbox_utils.py` — Hàm tiện ích hình học
+
+**Vai trò:** Thư viện hàm thuần, không có class, được import bởi hầu hết các module.
+
+### Các hàm
+
+#### `get_center_of_bbox(bbox)`
+```python
+# Input:  [x1, y1, x2, y2]
+# Output: (int, int) — tâm hình chữ nhật
+return int((x1+x2)/2), int((y1+y2)/2)
+```
+**Dùng cho:** xác định vị trí bóng, vẽ ellipse dưới cầu thủ.
+
+#### `get_bbox_width(bbox)`
+```python
+# Output: float — chiều rộng (x2 - x1)
+```
+**Dùng cho:** tính kích thước ellipse vẽ dưới cầu thủ.
+
+#### `measure_distance(p1, p2)`
+```python
+# Output: float — khoảng cách Euclidean √((x1-x2)²+(y1-y2)²)
+```
+**Dùng cho:** tính khoảng cách cầu thủ-bóng, khoảng cách optical flow, tốc độ di chuyển.
+
+#### `measure_xy_distance(p1, p2)`
+```python
+# Output: (dx, dy) — khoảng cách riêng từng trục
+return p1[0]-p2[0], p1[1]-p2[1]
+```
+**Dùng cho:** tính vector chuyển động camera (cần tách X và Y).
+
+#### `get_foot_position(bbox)`
+```python
+# Output: (int, int) — điểm giữa cạnh đáy bbox = vị trí chân
+return int((x1+x2)/2), int(y2)
+```
+**Dùng cho:** làm anchor point cho cầu thủ (thực tế hơn tâm bbox khi đứng trên sân).
+
+---
+
+## 3. `utils/video_utils.py` — Đọc/ghi video
+
+**Vai trò:** Wrapper đơn giản cho OpenCV, cách ly logic I/O.
+
+#### `read_video(video_path)`
+- Dùng `cv2.VideoCapture`, đọc hết frame vào list
+- Output: `list[np.ndarray]` — mỗi phần tử là 1 frame BGR
+
+#### `save_video(output_video_frames, output_video_path)`
+- Codec: **XVID** (`.avi`)
+- FPS: **24** (hard-coded ⚠️ — video thực có thể 25 FPS)
+- Kích thước lấy từ `frame[0].shape`
+
+---
+
+## 4. `trackers/tracker.py` — Class `Tracker`
+
+**Vai trò:** Module phức tạp nhất. Phụ trách 3 việc: **detect**, **track**, **vẽ**.
+
+### `__init__(model_path)`
+```python
+self.model = YOLO(model_path)      # Load model YOLOv8
+self.tracker = sv.ByteTrack()      # Khởi tạo ByteTrack
+```
+
+### `detect_frames(frames)` — Phát hiện đối tượng
+- Chạy YOLO theo **batch 20 frame** (tránh OOM)
+- Confidence threshold: **0.1** (thấp → bắt được nhiều, lọc sau)
+- Output: list kết quả YOLO thô
+
+### `get_object_tracks(frames, read_from_stub, stub_path)` — Track đối tượng
+**Đây là hàm trung tâm.** Pipeline bên trong:
+
+```
+detect_frames()
+    → sv.Detections.from_ultralytics()   # Chuyển sang format supervision
+    → Goalkeeper → Player (merge class)  # Thủ môn được coi là player
+    → ByteTrack.update_with_detections() # Gán ID xuyên suốt video
+    → phân loại vào players/referees/ball
+```
+
+**Caching stub:** Nếu `read_from_stub=True` và file pkl tồn tại → load ngay, bỏ qua detect (tiết kiệm thời gian dev).
+
+**Format output:**
+```python
+tracks = {
+    "players":  [{track_id: {"bbox": [x1,y1,x2,y2]}}, ...],  # mỗi phần tử = 1 frame
+    "referees": [{...}, ...],
+    "ball":     [{1: {"bbox": [...]}}, ...]   # ball luôn dùng id=1
+}
+```
+
+### `add_position_to_tracks(tracks)` — Thêm vị trí
+- Bóng → `get_center_of_bbox` (tâm)
+- Cầu thủ/trọng tài → `get_foot_position` (chân)
+- Thêm key `'position'` vào mỗi track_info
+
+### `interpolate_ball_positions(ball_positions)` — Nội suy bóng
+- Bóng thường bị miss nhiều frame (bị che, tốc độ cao)
+- Dùng **pandas interpolate()** để nội suy tuyến tính
+- **bfill()** để fill các frame đầu bị miss
+
+### `draw_ellipse(frame, bbox, color, track_id)` — Vẽ highlight cầu thủ
+- Vẽ **hình elip** dưới chân (mô phỏng shadow/spotlight)
+- Góc từ -45° đến 235° (hình chữ U)
+- Nếu có `track_id` → vẽ thêm **badge số ID** hình chữ nhật
+
+### `draw_traingle(frame, bbox, color)` — Vẽ mũi tên
+- Tam giác ngược trên đầu đối tượng
+- Dùng cho: **bóng** (xanh lá) và **cầu thủ đang giữ bóng** (đỏ)
+
+### `draw_team_ball_control(frame, frame_num, team_ball_control)` — Vẽ thống kê
+- Tính % kiểm soát bóng **tích lũy đến frame hiện tại**
+- Overlay trắng bán trong (alpha=0.4) ở góc phải dưới
+- Hiển thị: `Team 1: xx%` / `Team 2: xx%`
+
+### `draw_annotations(video_frames, tracks, team_ball_control)` — Vẽ tất cả
+- Hàm tổng hợp gọi 3 hàm draw trên cho từng frame
+- Có check bounds: frame_num >= len(tracks) → skip + cảnh báo
+
+---
+
+## 5. `team_assigner/team_assigner.py` — Class `TeamAssigner`
+
+**Vai trò:** Phân loại cầu thủ vào đội 1 hoặc đội 2 dựa trên **màu áo**, không cần nhãn thủ công.
+
+### Thuật toán 2 lớp K-Means
+
+**Lớp 1 — Tách cầu thủ khỏi nền** (`get_clustering_model` + `get_player_color`):
+```
+Crop bbox → lấy nửa trên → K-Means 2 cluster
+→ 4 góc ảnh thường là nền sân (cỏ xanh)
+→ cluster của góc = nền; cluster còn lại = áo cầu thủ
+→ trả về màu trung tâm cluster áo
+```
+
+**Lớp 2 — Phân 2 đội** (`assign_team_color`):
+```
+Lấy màu áo tất cả cầu thủ frame 0
+→ K-Means 2 cluster trên tập màu đó
+→ 2 tâm cluster = màu đặc trưng 2 đội
+→ lưu vào self.team_color[1] và self.team_color[2]
+```
+
+**Predict frame sau** (`get_player_team`):
+```
+Lấy màu áo → kmeans.predict() → team_id 0/1 → +1 → trả về 1/2
+Cache kết quả vào self.player_team_dict[player_id]
+```
+
+> **Hard-code đặc biệt:** `player_id == 91` → luôn gán đội 1 (fix lỗi phân loại thủ môn).
+
+---
+
+## 6. `player_ball_assigner/player_ball_assigner.py` — Class `PlayerBallAssigner`
+
+**Vai trò:** Xác định cầu thủ nào đang kiểm soát bóng trong mỗi frame.
+
+### `assign_ball_to_player(players, ball_bbox)`
+
+**Logic khoảng cách thông minh:**
+```python
+# Đo từ GÓC TRÁI và GÓC PHẢI chân bbox đến tâm bóng
+distance_left  = measure_distance((x1, y2), ball_center)
+distance_right = measure_distance((x2, y2), ball_center)
+distance = min(distance_left, distance_right)
+```
+
+**Tại sao không dùng tâm bbox?** Vì cầu thủ đá bóng bằng chân, không phải bằng ngực. Đo từ 2 góc dưới bbox thực tế hơn.
+
+**Ngưỡng:** `max_player_ball_distance = 70 px` — nếu không ai gần hơn 70px → trả về `-1` (không ai giữ bóng).
+
+---
+
+## 7. `camera_movement_estimator/camera_movement_estimator.py` — Class `CameraMovementEstimator`
+
+**Vai trò:** Tách chuyển động của camera ra khỏi chuyển động thật của cầu thủ.
+
+### Vấn đề cần giải quyết
+Khi camera di chuyển, toàn bộ pixel trên màn hình dịch chuyển — cầu thủ đứng yên cũng có tọa độ thay đổi. Cần trừ đi lượng dịch chuyển camera để có tọa độ thực.
+
+### `__init__(frame)` — Cấu hình Optical Flow
+```python
+self.lk_params = dict(
+    winSize=(15, 15),    # cửa sổ tìm kiếm
+    maxLevel=2,          # pyramid level
+    criteria=(...)       # điều kiện dừng
+)
+# Mask: chỉ theo dõi feature ở cột 0-20 và 900-1050
+# Lý do: vùng biên sân ít người qua lại → feature ổn định hơn
+```
+
+### `get_camera_movement(frames)` — Lucas-Kanade Optical Flow
+```
+Frame 0: detect feature points (goodFeaturesToTrack)
+Frame N: track các feature đó sang frame N+1 (calcOpticalFlowPyrLK)
+→ Feature dịch chuyển xa nhất = camera di chuyển
+→ Lấy (dx, dy) của feature đó = vector camera frame N
+→ Nếu max_distance < 5px → camera đứng yên → [0, 0]
+→ Re-detect features sau mỗi lần camera di chuyển
+```
+
+### `add_adjust_positions_to_tracks(tracks, camera_movement_per_frame)`
+```python
+position_adjusted = (position[0] - camera_dx,
+                     position[1] - camera_dy)
+```
+Trừ vector camera → tọa độ trong **hệ quy chiếu sân cố định**.
+
+### `draw_camera_movement(frames)` — HUD thông tin
+- Overlay trắng mờ góc trên trái
+- Hiển thị `Camera Movement X: xx.xx` và `Y: xx.xx` mỗi frame
+
+---
+
+## 8. `view_transformer/view_transformer.py` — Class `ViewTransformer`
+
+**Vai trò:** Chuyển tọa độ pixel 2D (góc nhìn camera) sang tọa độ **mét thực tế** trên mặt sân.
+
+### Tại sao cần điều này?
+100px ở gần camera ≠ 100px ở xa camera. Cần **perspective transform** để có khoảng cách thực.
+
+### `__init__()` — Định nghĩa Homography
+```python
+# 4 điểm mốc trên ảnh (pixel)
+self.pixel_verticies = np.array([
+    [110, 1035], [265, 275], [910, 260], [1640, 915]
+])
+# Tọa độ thực tương ứng (mét)
+self.target_verticies = np.array([
+    [0, 68], [0, 0], [23.32, 0], [23.32, 68]
+])
+# Ma trận biến đổi
+self.perspective_transformer = cv2.getPerspectiveTransform(...)
+```
+> Sân: **23.32m × 68m** (chỉ một phần sân được calibrate).
+
+### `transform_point(point)` — Biến đổi 1 điểm
+```python
+# Kiểm tra điểm có nằm trong vùng sân không
+is_inside = cv2.pointPolygonTest(pixel_verticies, p, False) >= 0
+if not is_inside: return None   # ngoài vùng calibrate → None
+# Apply homography
+return cv2.perspectiveTransform(point, transformer)
+```
+
+### `add_transformed_position_to_tracks(tracks)`
+- Lấy `position_adjusted` → gọi `transform_point`
+- Lưu vào `position_transformed` (đơn vị mét, hoặc `None`)
+
+---
+
+## 9. `speed_and_distance_estimator/speed_and_distance_estimator.py` — Class `SpeedAndDistance_Estimator`
+
+**Vai trò:** Tính tốc độ (km/h) và quãng đường (m) cho từng cầu thủ.
+
+### `__init__()`
+```python
+self.frame_window = 5    # tính trên mỗi cửa sổ 5 frame
+self.frame_rate = 24     # 24 FPS (⚠️ hard-coded)
+```
+
+### `add_speed_and_distance_to_tracks(tracks)` — Cửa sổ trượt
+```
+Với mỗi cửa sổ [frame_num, frame_num+5]:
+    start_pos = position_transformed tại frame đầu
+    end_pos   = position_transformed tại frame cuối
+    distance  = measure_distance(start, end) [mét]
+    time      = 5 / 24 = 0.208 giây
+    speed     = distance / time → ×3.6 → km/h
+    total_dist += distance (tích lũy)
+    → ghi speed & distance vào tất cả frame trong cửa sổ
+```
+
+**Bỏ qua:** `ball` và `referees` (chỉ tính cầu thủ).
+
+**Điều kiện bỏ qua:** `position_transformed is None` → cầu thủ ngoài vùng sân.
+
+### `draw_speed_and_distance(frames, tracks)` — Vẽ lên frame
+- Vị trí vẽ: dưới chân cầu thủ (+40px và +60px)
+- Format: `"xx.xx km/h"` và `"xx.xx m"`
+
+---
+
+## 10. `yolo_inference.py` — Script test độc lập
+
+**Vai trò:** Script nhanh để kiểm tra model YOLO, **không thuộc pipeline chính**.
+
+```python
+model = YOLO('models/best.pt')
+results = model.predict('input_videos/football-video.mp4', save=True)
+# In kết quả detection ra console
+```
+
+Dùng khi cần: debug model, xem model nhận diện được những gì, kiểm tra class names.
+
+---
+
+## Luồng dữ liệu — dict `tracks`
+
+Đây là cấu trúc dữ liệu trung tâm, được làm giàu dần qua từng bước:
+
+```python
+tracks["players"][frame_num][track_id] = {
+    "bbox":                 [x1, y1, x2, y2],      # sau Tracker
+    "position":             (x, y),                 # sau add_position
+    "position_adjusted":    (x, y),                 # sau CameraEstimator
+    "position_transformed": [x_m, y_m],             # sau ViewTransformer (mét)
+    "speed":                float,                  # sau SpeedEstimator (km/h)
+    "distance":             float,                  # sau SpeedEstimator (m)
+    "team":                 int,                    # sau TeamAssigner (1 hoặc 2)
+    "team_color":           [R, G, B],              # sau TeamAssigner
+    "has_ball":             bool,                   # sau PlayerBallAssigner
+}
+```
+
+---
+
+## Sơ đồ phụ thuộc giữa các module
+
+```mermaid
+graph LR
+    BU[bbox_utils] --> T
+    BU --> TA
+    BU --> PB
+    BU --> CME
+    BU --> SDE
+    VU[video_utils] --> M[main.py]
+    T[Tracker] --> M
+    TA[TeamAssigner] --> M
+    PB[PlayerBallAssigner] --> M
+    CME[CameraMovementEstimator] --> M
+    VT[ViewTransformer] --> M
+    SDE[SpeedDistanceEstimator] --> M
+```
+
+---
+
+## Tổng kết vai trò từng module
+
+| Module | Vai trò | Kỹ thuật |
+|--------|---------|----------|
+| `utils` | Hàm nền tảng | Toán học thuần |
+| `trackers` | Phát hiện + theo dõi đối tượng | YOLO + ByteTrack |
+| `camera_movement_estimator` | Loại bỏ nhiễu camera | Lucas-Kanade Optical Flow |
+| `view_transformer` | Chuyển sang tọa độ thực | Perspective Homography |
+| `speed_and_distance_estimator` | Phân tích chuyển động | Sliding window |
+| `team_assigner` | Phân loại đội | K-Means clustering |
+| `player_ball_assigner` | Xác định quyền kiểm soát bóng | Khoảng cách Euclidean |
+| `main` | Điều phối pipeline | Orchestration |
